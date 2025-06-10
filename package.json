@@ -27,12 +27,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/your-package-name.git"
+    "url": "git+https://github.com/Citolab/qti-api.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/your-package-name/issues"
+    "url": "https://github.com/Citolab/qti-api/issues"
   },
-  "homepage": "https://github.com/yourusername/your-package-name#readme",
+  "homepage": "https://github.com/Citolab/qti-api#readme",
   "peerDependencies": {
     "axios": ">=1.7.0",
     "@citolab/qti-components": ">=7.0.0-0 || >=7.0.0-beta.0 || >=7.0.0-next.0"
