@@ -1,0 +1,14 @@
+{
+  "yarn": false,
+  "contents": "dist",
+  "anyBranch": false,
+  "branch": "main",
+  "releaseDraft": false,
+  "tag": "latest",
+  "message": "Release v%s",
+  "preview": false,
+  "testScript": "test",
+  "tests": true,
+  "cleanup": true,
+  "publish": true
+}
