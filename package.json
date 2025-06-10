@@ -23,7 +23,7 @@
     "typescript",
     "library"
   ],
-  "author": "Your Name <your.email@example.com>",
+  "author": "Patrick de Klein, Sander Looise, Marcel Hoekstra",
   "license": "MIT",
   "repository": {
     "type": "git",
