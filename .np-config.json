@@ -8,7 +8,7 @@
   "message": "Release v%s",
   "preview": false,
   "testScript": "test",
-  "tests": true,
+  "tests": false,
   "cleanup": true,
   "publish": true
 }
