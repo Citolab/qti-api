@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "jest",
+    "_test": "jest",
     "lint": "eslint src/**/*.ts",
     "prepublishOnly": "npm run build",
     "release": "np"
