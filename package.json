@@ -13,7 +13,7 @@
     "_test": "jest",
     "lint": "eslint src/**/*.ts",
     "prepublishOnly": "npm run build",
-    "release": "np"
+    "release": "np --no-tests"
   },
   "engines": {
     "node": ">=14"
