@@ -1,6 +1,5 @@
 {
   "yarn": false,
-  "contents": "dist",
   "anyBranch": false,
   "branch": "main",
   "releaseDraft": false,
