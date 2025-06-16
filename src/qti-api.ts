@@ -1,33 +1,32 @@
 import {
-  ItemInfoWithContent,
   StudentAppSessionInfo,
   UserInfo,
   ExtendedTestContext,
   AssessmentInfo,
   SessionStateType,
   AuthenticationMethod,
-} from './model';
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
-import { IQtiDataApi } from './qti-data-api-interface';
-import { dateId, getNewToken, getRefreshTokenAndRetry } from './utils';
-
+} from "./model";
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
+import { IAuthStudentProvider, IQtiDataApi } from "./qti-data-api-interface";
+import { dateId, getRefreshTokenAndRetry } from "./utils";
 export class QtiApi implements IQtiDataApi {
   public axios: AxiosInstance = {} as AxiosInstance; // trick compiler
-  public userKey = '';
+  public userKey = "";
+
   constructor(
     public apiIUrl: string,
     private appId: string,
-    private firebaseAuthApiKey: string,
+    private authProvider: IAuthStudentProvider,
     private shouldGetXmlResourceFromDatabase = false,
     private axiosError?: (error: AxiosError) => void
   ) {
     // get domain from apiUrl
     const apiDomain =
-      apiIUrl.split('/').length > 2 ? apiIUrl.split('/')[2] : apiIUrl;
-    this.userKey = `userInfos-${appId}-${apiDomain}`;
+      apiIUrl.split("/").length > 2 ? apiIUrl.split("/")[2] : apiIUrl;
+    this.userKey = `userInfos-${appId}-${apiDomain}-${authProvider.getProviderId()}`;
     const storedUserInfo = localStorage.getItem(this.userKey);
     // remove / on end if api Url has it
-    if (apiIUrl.endsWith('/')) {
+    if (apiIUrl.endsWith("/")) {
       this.apiIUrl = apiIUrl.substring(0, apiIUrl.length - 1);
     }
     if (storedUserInfo) {
@@ -44,32 +43,33 @@ export class QtiApi implements IQtiDataApi {
 
     this.axios.interceptors.request.use((config) => {
       if (this.userInfo?.token) {
-        config.headers['Authorization'] = `Bearer ${this.userInfo.token}`;
+        config.headers["Authorization"] = `Bearer ${this.userInfo.token}`;
       }
       if (this.appId) {
-        config.headers['x-app'] = this.appId;
+        config.headers["x-app"] = this.appId;
       }
       if (this.userInfo?.assessment?.assessmentId) {
-        config.headers['x-assessment'] =
+        config.headers["x-assessment"] =
           this.userInfo?.assessment?.assessmentId;
       }
       if (this.userInfo?.code) {
-        config.headers['x-code'] = this.userInfo.code;
+        config.headers["x-code"] = this.userInfo.code;
       }
       if (this.userInfo?.identification) {
-        config.headers['x-name'] = this.userInfo.identification;
+        config.headers["x-name"] = this.userInfo.identification;
       }
       if (this.shouldGetXmlResourceFromDatabase) {
-        config.headers['x-xml-from-db'] = 'true';
+        config.headers["x-xml-from-db"] = "true";
       }
       return config;
     });
+
     this.axios.interceptors.response.use(
       (response) => {
         // Do something with successful response
         return response;
       },
-      (error: AxiosError) => {
+      async (error: AxiosError) => {
         const originalRequest = error.config;
 
         if (
@@ -81,23 +81,23 @@ export class QtiApi implements IQtiDataApi {
 
           let authenticationMethod: (() => Promise<unknown>) | undefined;
 
-          if (this.userInfo?.authenticationMethod === 'anonymous') {
-            authenticationMethod = () => this.anonymousLogin();
+          if (this.userInfo?.authenticationMethod === "anonymous") {
+            authenticationMethod = () => this.authenticateAnonymously();
           } else if (
             this._userInfo &&
-            this.userInfo?.authenticationMethod === 'code' &&
+            this.userInfo?.authenticationMethod === "code" &&
             this._userInfo?.code
           ) {
             authenticationMethod = () =>
               this.authenticateByCode(this._userInfo!.code);
           } else if (
             this._userInfo &&
-            this.userInfo?.authenticationMethod === 'assessment' &&
+            this.userInfo?.authenticationMethod === "assessment" &&
             this._userInfo?.assessment?.assessmentId
           ) {
             authenticationMethod = () =>
               this.authenticateByAssessmentId({
-                assessmentId: this._userInfo?.assessment?.assessmentId || '',
+                assessmentId: this._userInfo?.assessment?.assessmentId || "",
                 identification: this._userInfo?.identification,
               });
           }
@@ -132,7 +132,7 @@ export class QtiApi implements IQtiDataApi {
   }
 
   public async getAssessments() {
-    const value = await this.axios.get<AssessmentInfo[]>('/assessments');
+    const value = await this.axios.get<AssessmentInfo[]>("/assessments");
     return value.data;
   }
 
@@ -153,7 +153,7 @@ export class QtiApi implements IQtiDataApi {
     | undefined {
     if (this._userInfo) return this._userInfo;
     if (localStorage) {
-      const u = localStorage.getItem(`userInfo_${this.appId}`);
+      const u = localStorage.getItem(this.userKey);
       if (u) {
         return JSON.parse(u) as UserInfo & {
           token: string;
@@ -164,6 +164,7 @@ export class QtiApi implements IQtiDataApi {
     }
     return undefined;
   }
+
   set userInfo(
     value:
       | (UserInfo & {
@@ -186,14 +187,14 @@ export class QtiApi implements IQtiDataApi {
     const userInfo = await this.anonymousLogin();
     if (userInfo) {
       this.userInfo = {
-        appId: this.appId || '',
-        teacherId: '',
-        userId: userInfo.localId || '',
-        identification: '',
+        appId: this.appId || "",
+        teacherId: "",
+        userId: userInfo.localId || "",
+        identification: "",
         isDemo: false,
-        authenticationMethod: 'anonymous',
+        authenticationMethod: "anonymous",
         refreshToken: userInfo.refreshToken,
-        code: userInfo.localId || '',
+        code: userInfo.localId || "",
         token: userInfo.idToken,
       };
       return { ...this.userInfo, sessions: [] };
@@ -210,20 +211,20 @@ export class QtiApi implements IQtiDataApi {
     const userInfo = await this.anonymousLogin();
     if (userInfo) {
       this.userInfo = {
-        appId: this.appId || '',
-        teacherId: '',
-        userId: userInfo.localId || '',
-        identification: config.identification || '',
-        authenticationMethod: 'anonymous',
+        appId: this.appId || "",
+        teacherId: "",
+        userId: userInfo.localId || "",
+        identification: config.identification || "",
+        authenticationMethod: "anonymous",
         isDemo: false,
         refreshToken: userInfo.refreshToken,
-        code: '',
+        code: "",
         token: userInfo.idToken,
       };
       const studentAppSessionInfoData =
         await this.axios.post<StudentAppSessionInfo>(`/assessment/checkCode`, {
           code: config.code,
-          identification: config.identification || '',
+          identification: config.identification || "",
         });
       const studentAppSessionInfo = studentAppSessionInfoData.data;
       if (!studentAppSessionInfo) {
@@ -236,9 +237,9 @@ export class QtiApi implements IQtiDataApi {
           (c) => c.assessmentId === studentAppSessionInfo.currentAssessmentId
         );
         assessment = {
-          assessmentId: currentSession?.assessmentId || '',
-          name: currentSession?.assessmentName || '',
-          packageId: currentSession?.packageId || '',
+          assessmentId: currentSession?.assessmentId || "",
+          name: currentSession?.assessmentName || "",
+          packageId: currentSession?.packageId || "",
           isDemo: studentAppSessionInfo.isDemo,
         };
       }
@@ -255,16 +256,16 @@ export class QtiApi implements IQtiDataApi {
 
       if (studentAppSessionInfo.isDemo) {
         return {
-          appId: this.appId || '',
+          appId: this.appId || "",
           code: config.code,
-          teacherId: '',
+          teacherId: "",
           isDemo: true,
           sessions: [
             {
-              assessmentId: assessment?.assessmentId || '',
-              assessmentName: assessment?.name || '',
+              assessmentId: assessment?.assessmentId || "",
+              assessmentName: assessment?.name || "",
               packageId: assessment.packageId,
-              sessionState: 'not_started',
+              sessionState: "not_started",
             },
           ],
         } as StudentAppSessionInfo;
@@ -273,8 +274,8 @@ export class QtiApi implements IQtiDataApi {
           `/session/start`,
           {
             metadata: config.metadata,
-            assessmentId: studentAppSessionInfo.assessment?.assessmentId || '',
-            identification: config.identification || '',
+            assessmentId: studentAppSessionInfo.assessment?.assessmentId || "",
+            identification: config.identification || "",
           }
         );
         if (testSessionInfo.data) {
@@ -282,7 +283,7 @@ export class QtiApi implements IQtiDataApi {
             testSessionInfo.data as StudentAppSessionInfo;
           this.userInfo = {
             ...this.userInfo,
-            code: studentAppSessionInfo?.code || '',
+            code: studentAppSessionInfo?.code || "",
             isDemo: studentAppSessionInfo?.isDemo || false,
             assessment: studentAppSessionInfo?.assessment || undefined,
           };
@@ -298,12 +299,12 @@ export class QtiApi implements IQtiDataApi {
     const userInfo = await this.anonymousLogin();
     if (userInfo) {
       this.userInfo = {
-        appId: this.appId || '',
-        teacherId: '',
-        userId: userInfo.localId || '',
-        identification: '',
+        appId: this.appId || "",
+        teacherId: "",
+        userId: userInfo.localId || "",
+        identification: "",
         isDemo: false,
-        authenticationMethod: 'code',
+        authenticationMethod: "code",
         code,
         refreshToken: userInfo.refreshToken,
         token: userInfo.idToken,
@@ -318,9 +319,9 @@ export class QtiApi implements IQtiDataApi {
         // const asessments = await this.getAssessments();
         const firstUnfinishedSession = testSessionInfo.data.sessions.find(
           (s) =>
-            s.sessionState !== 'not_available' &&
-            s.sessionState !== 'finished' &&
-            s.sessionState !== 'scored'
+            s.sessionState !== "not_available" &&
+            s.sessionState !== "finished" &&
+            s.sessionState !== "scored"
         );
         const assessmentInfo = (testSessionInfo.data.assessment ||
           firstUnfinishedSession) as AssessmentInfo;
@@ -352,15 +353,15 @@ export class QtiApi implements IQtiDataApi {
     const userInfo = await this.anonymousLogin();
     if (userInfo) {
       this.userInfo = {
-        appId: this.appId || '',
-        teacherId: '',
-        userId: userInfo.localId || '',
-        identification: config.identification || '',
+        appId: this.appId || "",
+        teacherId: "",
+        userId: userInfo.localId || "",
+        identification: config.identification || "",
         // assessmentId: config.assessmentId,
-        authenticationMethod: 'anonymous',
+        authenticationMethod: "anonymous",
         isDemo: false,
         refreshToken: userInfo.refreshToken,
-        code: '',
+        code: "",
         token: userInfo.idToken,
       };
       const testSessionInfo = await this.axios.post<StudentAppSessionInfo>(
@@ -368,7 +369,7 @@ export class QtiApi implements IQtiDataApi {
         {
           metadata: config.metadata,
           assessmentId: config.assessmentId,
-          identification: config.identification || '',
+          identification: config.identification || "",
         }
       );
       if (testSessionInfo.data) {
@@ -376,7 +377,7 @@ export class QtiApi implements IQtiDataApi {
           testSessionInfo.data as StudentAppSessionInfo;
         this.userInfo = {
           ...this.userInfo,
-          code: studentAppSessionInfo?.code || '',
+          code: studentAppSessionInfo?.code || "",
           isDemo: studentAppSessionInfo?.isDemo || false,
           assessment: studentAppSessionInfo.assessment,
         };
@@ -398,15 +399,21 @@ export class QtiApi implements IQtiDataApi {
     }
   };
 
+  log = async (type: string, data: any) => {
+    const response = await this.axios.post("/student/log", {
+      type,
+      data,
+    });
+    if (response.data) {
+      return response.data;
+    } else {
+      throw "Could not log student activity";
+    }
+  };
+
   getStudentProgress = async () => {
     const response = await this.axios.get<StudentAppSessionInfo>(
-      'session/info'
-    );
-    return response.data;
-  };
-  getItemsByAssessmentId = async (assessmentId: string) => {
-    const response = await this.axios.get<ItemInfoWithContent[]>(
-      `/assessment/${assessmentId}/items`
+      "session/info"
     );
     return response.data;
   };
@@ -415,7 +422,7 @@ export class QtiApi implements IQtiDataApi {
     //get all localStorage keys
     const keys = Object.keys(localStorage);
     for (const key of keys) {
-      if (key.startsWith(`userInfo_${this.appId}`)) {
+      if (key.startsWith(`userInfo_${this.appId}`) || key === this.userKey) {
         localStorage.removeItem(key);
       }
     }
@@ -459,7 +466,7 @@ export class QtiApi implements IQtiDataApi {
       }
     );
     return sessionInfo.data;
-  }
+  };
 
   logAction = async (
     assessmentId: string,
@@ -471,27 +478,19 @@ export class QtiApi implements IQtiDataApi {
       type: action,
       payload,
       time: date,
-      createdBy: this.userInfo?.userId || '',
+      createdBy: this.userInfo?.userId || "",
     });
   };
 
   private anonymousLogin = async () => {
     // if logged in before, then refresh the token
     if (this.userInfo && this.userInfo.refreshToken) {
-      const results = getNewToken(
-        this.userInfo.refreshToken,
-        this.firebaseAuthApiKey
+      const results = await this.authProvider.refreshToken(
+        this.userInfo.refreshToken
       );
       return results;
     }
-    const result = await axios.post<{
-      idToken: string;
-      localId: string;
-      refreshToken: string;
-    }>(
-      `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${this.firebaseAuthApiKey}`,
-      { returnSecureToken: true }
-    );
-    return result.data;
+    const result = await this.authProvider.authenticate();
+    return result;
   };
 }

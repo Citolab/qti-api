@@ -14,6 +14,10 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
   constructor(public qtiApi: IQtiDataApi) {
     this.apiIUrl = qtiApi.apiIUrl;
   }
+  public log(type: string, data: any) {
+    console.log(`Action: ${type}`, data);
+    return Promise.resolve();
+  }
 
   public async getAssessments() {
     return this.qtiApi.getAssessments();
@@ -72,9 +76,6 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
       return JSON.parse(stored) as StudentAppSessionInfo;
     }
     return null;
-  };
-  getItemsByAssessmentId = async (packageId: string, assessmentId: string) => {
-    return this.qtiApi.getItemsByAssessmentId(packageId, assessmentId);
   };
 
   logout = () => {

@@ -1,29 +1,29 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import {
   PlannedSessions,
   AssessmentInfo,
-  ItemInfoWithContent,
   StudentResult,
   Session,
   SessionInfoTeacher,
   ItemStatisticsWithResponses,
-} from './model';
-import { IQtiTeacherApi } from './qti-teacher-interface';
+  StudentAppSessionInfo,
+} from "./model";
+import { IQtiTeacherApi, ITeacherAuthProvider } from "./qti-teacher-interface";
 import {
   getNewToken,
   getRefreshTokenAndRetry,
   removeDoubleSlashes,
-} from './utils';
-import { ItemContext } from '@citolab/qti-components/exports/item.context.js';
+} from "./utils";
+import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
 
 export class QtiTeacherApi implements IQtiTeacherApi {
   private failedRequests = 0;
   public axios: AxiosInstance = {} as AxiosInstance; // trick compiler
-  private _token = '';
-  private _refreshToken = '';
+  private _token = "";
+  private _refreshToken = "";
   public apiIUrl: string;
   private appId: string;
-  private firebaseAuthApiKey: string;
+  private authProvider: ITeacherAuthProvider;
   private axiosError?: (error: AxiosError) => void;
   private admin = false;
   private checkAccess = true;
@@ -32,23 +32,17 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     public options: {
       apiIUrl: string;
       appId: string;
-      firebaseAuthApiKey: string;
+      authProvider: ITeacherAuthProvider;
       axiosError?: (error: AxiosError) => void;
       admin?: boolean;
       checkAccess?: boolean;
     }
   ) {
-    const {
-      apiIUrl,
-      appId,
-      firebaseAuthApiKey,
-      axiosError,
-      admin,
-      checkAccess,
-    } = options;
+    const { apiIUrl, appId, authProvider, axiosError, admin, checkAccess } =
+      options;
     this.apiIUrl = apiIUrl;
     this.appId = appId;
-    this.firebaseAuthApiKey = firebaseAuthApiKey;
+    this.authProvider = authProvider;
     if (axiosError) {
       this.axiosError = axiosError;
     }
@@ -64,11 +58,14 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   get token() {
     if (this._token) return this._token;
     if (localStorage) {
-      const token = localStorage.getItem('token') || '';
+      const token =
+        localStorage.getItem(`token-${this.authProvider.getProviderId()}`) ||
+        "";
       return token;
     }
-    return '';
+    return "";
   }
+
   set token(value: string) {
     if (value) {
       if (value === this._token) return;
@@ -76,7 +73,10 @@ export class QtiTeacherApi implements IQtiTeacherApi {
 
       this.createAxiosInstance();
       if (localStorage) {
-        localStorage.setItem('token', value);
+        localStorage.setItem(
+          `token-${this.authProvider.getProviderId()}`,
+          value
+        );
       }
     }
   }
@@ -84,16 +84,18 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   get refreshToken() {
     if (this._refreshToken) return this._refreshToken;
     if (localStorage) {
-      const token = localStorage.getItem('t2') || '';
+      const token =
+        localStorage.getItem(`t2-${this.authProvider.getProviderId()}`) || "";
       return token;
     }
-    return '';
+    return "";
   }
+
   set refreshToken(value: string) {
     if (value) {
       this._refreshToken = value;
       if (localStorage) {
-        localStorage.setItem('t2', value);
+        localStorage.setItem(`t2-${this.authProvider.getProviderId()}`, value);
       }
     }
   }
@@ -101,15 +103,15 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   // Clear all tokens and reset state
   public clearTokensAndReset(): void {
     // Clear internal state
-    this._token = '';
-    this._refreshToken = '';
+    this._token = "";
+    this._refreshToken = "";
     this.failedRequests = 0;
 
     // Clear localStorage
     if (localStorage) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('t2');
-      localStorage.removeItem('qti-firestore');
+      localStorage.removeItem(`token-${this.authProvider.getProviderId()}`);
+      localStorage.removeItem(`t2-${this.authProvider.getProviderId()}`);
+      localStorage.removeItem("qti-firestore");
     }
 
     // Recreate axios instance without tokens
@@ -120,27 +122,29 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     this.axios = axios.create({
       baseURL: this.apiIUrl,
     });
+
     this.axios.interceptors.request.use((config) => {
       if (this.token) {
-        config.headers['Authorization'] = `Bearer ${this.token}`;
+        config.headers["Authorization"] = `Bearer ${this.token}`;
       }
       if (this.appId) {
-        config.headers['x-app'] = this.appId;
+        config.headers["x-app"] = this.appId;
       }
 
       if (this.admin) {
-        config.headers['x-admin'] = 'true';
+        config.headers["x-admin"] = "true";
       }
 
       return config;
     });
+
     this.axios.interceptors.response.use(
       (response) => {
         // Reset failed requests on successful response
         this.failedRequests = 0;
         return response;
       },
-      (error: AxiosError) => {
+      async (error: AxiosError) => {
         if (
           (error.response?.status === 403 || error.response?.status === 401) &&
           this.refreshToken &&
@@ -148,13 +152,24 @@ export class QtiTeacherApi implements IQtiTeacherApi {
         ) {
           this.failedRequests++; // Increment to prevent infinite loops
           const originalRequest = error.config;
+
           return getRefreshTokenAndRetry(
             originalRequest as AxiosRequestConfig & {
               _retry?: boolean;
             },
             error,
             this.axios,
-            () => getNewToken(this.refreshToken, this.firebaseAuthApiKey),
+            async () => {
+              const authResult = await this.authProvider.refreshToken(
+                this.refreshToken
+              );
+              // Update tokens
+              this.token = authResult.idToken;
+              if (authResult.refreshToken) {
+                this.refreshToken = authResult.refreshToken;
+              }
+              return authResult;
+            },
             // Modified to handle failed refresh attempts
             (retryError: AxiosError) => {
               // If refresh also fails, clear tokens and call original error handler
@@ -178,31 +193,22 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     );
   }
 
+  log = async (type: string, data: any) => {
+    const response = await this.axios.post("/teacher/log", {
+      type,
+      data,
+    });
+    if (response.data) {
+      return response.data;
+    } else {
+      throw "Could not log teacher activity";
+    }
+  };
+
   public async getLoggedInUser() {
     try {
-      const url = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${this.firebaseAuthApiKey}`;
-      const userDataResult = await axios.post<
-        { idToken: string },
-        {
-          data: {
-            users: {
-              displayName: string;
-              email: string;
-              localId: string;
-            }[];
-          };
-        }
-      >(url, {
-        idToken: this.token,
-      });
-      if (userDataResult.data.users.length > 0) {
-        return userDataResult.data.users[0] as {
-          displayName: string;
-          email: string;
-          localId: string;
-        };
-      }
-      return null;
+      const user = await this.authProvider.getLoggedInUser(this.token);
+      return user;
     } catch (error) {
       console.error(error);
       // If token lookup fails, clear tokens
@@ -218,39 +224,41 @@ export class QtiTeacherApi implements IQtiTeacherApi {
 
   // use default axios instance for authentication requests
   public async authenticate(email: string, password: string) {
-    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${this.firebaseAuthApiKey}`;
-    const loginResult = await axios.post<{ idToken: string }>(url, {
-      email,
-      password,
-      returnSecureToken: true,
-    });
-    let headers = {
-      'x-app': this.appId,
-      Authorization: 'Bearer ' + loginResult.data.idToken,
-    };
-
-    if (this.admin) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      headers = { ...(headers as any), 'x-admin': 'true' };
-    }
-    // this.createAxiosInstance();
-    this.axios = axios.create({
-      baseURL: this.apiIUrl,
-      headers,
-    });
-    // now check if the user has rights to access the application
     try {
+      const authResult = await this.authProvider.authenticate(email, password);
+
+      let headers = {
+        "x-app": this.appId,
+        Authorization: "Bearer " + authResult.idToken,
+      };
+
+      if (this.admin) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        headers = { ...(headers as any), "x-admin": "true" };
+      }
+
+      // Create temporary axios instance to check access
+      const tempAxios = axios.create({
+        baseURL: this.apiIUrl,
+        headers,
+      });
+
+      // now check if the user has rights to access the application
       let hasAccess = true;
       if (this.checkAccess) {
-        const accessResult = await this.axios.post(`/teacher/access`);
+        const accessResult = await tempAxios.post(`/teacher/access`);
         hasAccess = !!accessResult.data?.hasAccess;
       }
-      const token = loginResult.data.idToken;
-      this.token = token;
+
       if (hasAccess) {
-        return loginResult.data;
+        // Set tokens and recreate axios instance
+        this.token = authResult.idToken;
+        if (authResult.refreshToken) {
+          this.refreshToken = authResult.refreshToken;
+        }
+        return authResult;
       } else {
-        console.error('no access');
+        console.error("no access");
         return null;
       }
     } catch (e) {
@@ -260,37 +268,24 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   }
 
   public async signUp(email: string, password: string) {
-    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${this.firebaseAuthApiKey}`;
-    const loginResult = await axios.post<{ idToken: string }>(url, {
-      email,
-      password,
-      returnSecureToken: true,
-    });
-    return loginResult.data;
+    const result = await this.authProvider.signUp(email, password);
+    return result;
   }
 
   public async passwordReset(email: string) {
-    const url = `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${this.firebaseAuthApiKey}`;
-    await axios.post<{ email: string }>(url, {
-      email,
-      requestType: 'PASSWORD_RESET',
-    });
+    await this.authProvider.passwordReset(email);
   }
 
   logout() {
     this.clearTokensAndReset();
   }
 
-  // use authInstance for requests to the qti-backend api
+  // All the remaining methods stay exactly the same since they only use this.axios
   async getTestsForApplication(): Promise<AssessmentInfo[]> {
     const response = await this.axios.get<{
       assessments: AssessmentInfo[];
     }>(removeDoubleSlashes(`${this.apiIUrl}/teacher/assessments`));
     return response.data?.assessments || [];
-  }
-
-  getItemsForApplication(): Promise<ItemInfoWithContent[]> {
-    throw new Error('Method not implemented.');
   }
 
   async getAssessmentInfo(assessmentId: string) {
@@ -300,20 +295,17 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     return value.data;
   }
 
-  public async getItemsByAssessmentId(assessmentId: string) {
-    const response = await this.axios.get<ItemInfoWithContent[]>(
-      removeDoubleSlashes(`${this.apiIUrl}/assessment/${assessmentId}/items`)
-    );
-    return response.data;
-  }
   public async deleteStudent(code: string): Promise<void> {
     await this.axios.delete(`/teacher/session/${code}`);
   }
 
-  public async addStudentId(code: string, studentId: string): Promise<void> {
+  public async addStudentIdentification(
+    code: string,
+    identification: string
+  ): Promise<void> {
     await this.axios.post(`/teacher/student/update`, {
       code,
-      studentId,
+      identification,
     });
   }
 
@@ -344,7 +336,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     assessmentIds?: string[] | undefined;
   }): Promise<PlannedSessions<SessionInfoTeacher>[]> {
     const result = await this.axios.post<PlannedSessions<SessionInfoTeacher>[]>(
-      '/teacher/plan',
+      "/teacher/plan",
       {
         count,
         assessmentIds,
@@ -361,7 +353,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     assessmentIds?: string[] | undefined;
   }): Promise<PlannedSessions<SessionInfoTeacher>[]> {
     const result = await this.axios.post<PlannedSessions<SessionInfoTeacher>[]>(
-      '/teacher/planByIdentification',
+      "/teacher/planByIdentification",
       {
         identifiers,
         assessmentIds,
@@ -374,21 +366,50 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     PlannedSessions<SessionInfoTeacher>[]
   > {
     const result = await this.axios.get<PlannedSessions<SessionInfoTeacher>[]>(
-      '/teacher/students'
+      "/teacher/students"
     );
     return result.data;
   }
 
   public async getItemStats<T extends ItemStatisticsWithResponses>(
-    itemIdentifiers: string[],
-    target: 'teacher' | 'reviewer' = 'teacher'
+    assessmentId: string,
+    target: "teacher" | "reviewer" = "teacher"
   ): Promise<T[]> {
     const result = await this.axios.get<T[]>(
-      target === 'teacher'
-        ? `/teacher/itemStats/${itemIdentifiers.join(',')}`
-        : `teacher/review/itemStats/${itemIdentifiers.join(',')}`
+      `/teacher/assessment/${assessmentId}/itemStats`,
+      {
+        params: {
+          role: target,
+        },
+      }
     );
     return result.data as T[];
+  }
+
+  /**
+   * Create a new group groupDeliveryCode/activity
+   * @returns Promise containing the generated activity code
+   */
+  public async createGroupDelivery(
+    assessmentId: string
+  ): Promise<{ groupDeliveryCode: string }> {
+    const result = await this.axios.post<{ groupDeliveryCode: string }>(
+      "/teacher/startGroupDelivery",
+      { assessmentId }
+    );
+    return result.data;
+  }
+
+  /**
+   * Get assessment information by assessment ID
+   * @param assessmentId - The ID of the assessment
+   * @returns Promise containing the assessment information
+   */
+  public async getAssessmentInfoByGroupCode<T = any>(
+    assessmentId: string
+  ): Promise<T> {
+    const result = await this.axios.get<T>(`/assessment/${assessmentId}`);
+    return result.data;
   }
 
   /**
@@ -401,15 +422,19 @@ export class QtiTeacherApi implements IQtiTeacherApi {
    */
   public async updateItemStatResponseScore(
     itemIdentifier: string,
+    assessmentId: string,
     responseId: string,
     scoreExternal: number | null,
-    target: 'teacher' | 'reviewer' = 'teacher'
+    target: "teacher" | "reviewer" = "teacher"
   ) {
-    await this.axios.post(`/teacher/itemStats/${itemIdentifier}`, {
-      responseId,
-      scoreExternal,
-      target,
-    });
+    await this.axios.post(
+      `/teacher/assessment/${assessmentId}/itemStats/${itemIdentifier}`,
+      {
+        responseId,
+        scoreExternal,
+        target,
+      }
+    );
   }
 
   public async getStudentResults<

@@ -1,13 +1,14 @@
-import { ItemContext } from '@citolab/qti-components/exports/item.context.js';
+import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
 import {
   PlannedSessions,
   AssessmentInfo,
-  ItemInfoWithContent,
+  ItemInfo,
   StudentResult,
   SessionInfoTeacher,
   Session,
   ItemStatisticsWithResponses,
-} from './model';
+  SessionStateType,
+} from "./model";
 
 export interface IQtiTeacherApi {
   // token
@@ -35,46 +36,91 @@ export interface IQtiTeacherApi {
 
   // assessment packages
   getTestsForApplication: () => Promise<AssessmentInfo[]>;
-  getItemsForApplication: () => Promise<ItemInfoWithContent[]>;
-  getItemsByAssessmentId: (
-    assessmentId: string
-  ) => Promise<ItemInfoWithContent[]>;
-
+  log: (type: string, data: any) => Promise<void>;
   // planning
   planStudents: (config: {
     count?: number;
     assessmentIds?: string[];
   }) => Promise<PlannedSessions<SessionInfoTeacher>[]>;
-
   planStudentsByIdentification: (config: {
     identifiers: string[];
     assessmentIds?: string[];
   }) => Promise<PlannedSessions<SessionInfoTeacher>[]>;
+  createGroupDelivery: (assessmentId: string) => Promise<{
+    groupDeliveryCode: string;
+  }>;
   deleteStudent: (code: string) => Promise<void>;
   resetSession: (code: string, assessmentId: string) => Promise<void>;
-  addStudentId: (code: string, studentId: string) => Promise<void>;
+  addStudentIdentification: (
+    code: string,
+    identification: string
+  ) => Promise<void>;
   updateSession: (
     code: string,
     assessmentId: string,
     session: Session
   ) => Promise<void>;
   getItemStats<T extends ItemStatisticsWithResponses>(
-    itemIdentifiers: string[],
-    target: 'teacher' | 'reviewer'
+    assessmentId: string,
+    target: "teacher" | "reviewer"
   ): Promise<T[]>;
-
   updateItemStatResponseScore: (
     itemIdentifier: string,
+    assessmentId: string,
     responseId: string,
     score: number,
-    target: 'teacher' | 'reviewer'
+    target: "teacher" | "reviewer"
   ) => Promise<void>;
 
   getAssessmentInfo: (assessmentId: string) => Promise<AssessmentInfo>;
-
+  getAssessmentInfoByGroupCode: (groupCode: string) => Promise<AssessmentInfo>;
   getStudentResults: <T extends ItemContext, T2 extends StudentResult<T>[]>(
     assessmentId: string
   ) => Promise<T2>;
 
   getPlannedSessions: () => Promise<PlannedSessions<SessionInfoTeacher>[]>;
+}
+
+export interface ITeacherAuthProvider {
+  /**
+   * Authenticate with email and password
+   */
+  authenticate(email: string, password: string): Promise<TeacherAuthResult>;
+
+  /**
+   * Sign up a new user
+   */
+  signUp(email: string, password: string): Promise<TeacherAuthResult>;
+
+  /**
+   * Send password reset email
+   */
+  passwordReset(email: string): Promise<void>;
+
+  /**
+   * Get logged in user information
+   */
+  getLoggedInUser(token: string): Promise<TeacherUserInfo | null>;
+
+  /**
+   * Refresh expired tokens
+   */
+  refreshToken(refreshToken: string): Promise<TeacherAuthResult>;
+
+  /**
+   * Get provider-specific identifier
+   */
+  getProviderId(): string;
+}
+
+export interface TeacherAuthResult {
+  idToken: string;
+  refreshToken?: string;
+  localId?: string;
+}
+
+export interface TeacherUserInfo {
+  displayName: string;
+  email: string;
+  localId: string;
 }

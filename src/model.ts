@@ -1,26 +1,26 @@
-import { ResponseInteraction } from '@citolab/qti-components/exports/expression-result.js';
-import { ItemContext } from '@citolab/qti-components/exports/item.context.js';
-import { TestContext } from '@citolab/qti-components/qti-test/core';
+import { ResponseInteraction } from "@citolab/qti-components/exports/expression-result.js";
+import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
+import { TestContext } from "@citolab/qti-components/qti-test/core";
 
 export type SessionStateType =
-  | 'not_generated'
-  | 'not_available'
-  | 'not_started'
-  | 'started'
-  | 'finished'
-  | 'scored';
+  | "not_generated"
+  | "not_available"
+  | "not_started"
+  | "started"
+  | "finished"
+  | "scored";
 
 export type AuthenticationMethod =
-  | 'anonymous'
-  | 'code'
-  | 'assessment'
-  | 'group_code';
+  | "anonymous"
+  | "code"
+  | "assessment"
+  | "group_code";
 
 export interface ExtendedItemContext extends ItemContext {
   scoreType?: string;
 }
 
-export interface ExtendedTestContext extends Omit<TestContext, 'items'> {
+export interface ExtendedTestContext extends Omit<TestContext, "items"> {
   navPartId?: string | null;
   navSectionId?: string | null;
   navItemId?: string | null;
@@ -63,7 +63,7 @@ export interface StudentAppSessionInfo extends UserInfo {
     endAt?: number;
     startCode?: string;
   }[];
-  testGroup?: 'experimental' | 'control';
+  testGroup?: "experimental" | "control";
 }
 
 export interface StudentResult<T extends ItemContext> {
@@ -108,28 +108,28 @@ export interface SessionInfoTeacher extends Session {
 
 // QTI PACKAGE MODEL
 export interface PackageResource {
-  type: 'test' | 'item' | 'manifest';
+  type: "test" | "item" | "manifest";
   identifier: string;
   path: string;
   content: string;
 }
 
 export type interactionType =
-  | 'unknown'
-  | 'inlineChoice'
-  | 'choice'
-  | 'textEntry'
-  | 'extendedTextEntry'
-  | 'info'
-  | 'customInteraction'
-  | 'matchInteraction';
+  | "unknown"
+  | "inlineChoice"
+  | "choice"
+  | "textEntry"
+  | "extendedTextEntry"
+  | "info"
+  | "customInteraction"
+  | "matchInteraction";
 
 export interface ItemInfo {
   identifier: string;
   title: string;
   href: string;
   categories: string[];
-  type: 'regular' | 'info';
+  type: "regular" | "info";
   interactionType?: interactionType;
   correctAnswer?: string;
   calamity?: boolean;
@@ -141,21 +141,20 @@ export interface ItemInfo {
   weight?: number;
 }
 
-export interface ItemInfoWithContent extends ItemInfo {
-  content: string;
-}
-
 // Define a type instead of an interface for this case
 export type AssessmentItemRefInfo<T extends ItemInfo> = T & {
   itemRefIdentifier: string;
 };
 
-export interface AssessmentInfo {
+export interface AssessmentBasicInfo {
   packageId: string;
   assessmentId: string;
   name: string;
+}
+
+export interface AssessmentInfo extends AssessmentBasicInfo {
   assessmentHref?: string;
-  items?: AssessmentItemRefInfo<ItemInfoWithContent>[];
+  items?: AssessmentItemRefInfo<ItemInfo>[];
   isDemo?: boolean;
   teacherId?: string;
   packageName?: string;
@@ -166,7 +165,7 @@ export interface AssessmentInfo {
 }
 
 export interface AsssessmentResource extends PackageResource {
-  type: 'test';
+  type: "test";
   items: ItemInfo[];
 }
 
@@ -178,7 +177,7 @@ export interface ItemResult {
   itemId: string;
   score: number;
   response: string;
-  completionStatus: 'completed' | 'incomplete' | 'not_attempted' | 'unknown';
+  completionStatus: "completed" | "incomplete" | "not_attempted" | "unknown";
 }
 
 export interface Item extends QtiResource {

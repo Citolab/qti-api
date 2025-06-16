@@ -1,10 +1,10 @@
 import {
   AssessmentInfo,
-  ItemInfoWithContent,
+  ItemInfo,
   StudentAppSessionInfo,
   ExtendedTestContext,
   SessionStateType,
-} from './model';
+} from "./model";
 
 export interface IQtiDataApi {
   apiIUrl: string;
@@ -16,7 +16,7 @@ export interface IQtiDataApi {
     metadata?: unknown;
   }) => Promise<StudentAppSessionInfo>;
   authenticateAnonymously: () => Promise<StudentAppSessionInfo>;
-
+  log: (type: string, data: any) => Promise<void>;
   // TODO
   // authenticateByGroupCode: (
   //   code: string,
@@ -29,10 +29,6 @@ export interface IQtiDataApi {
     action: string,
     payload?: unknown
   ) => Promise<void>;
-  getItemsByAssessmentId: (
-    packageId: string,
-    assessmentId: string
-  ) => Promise<ItemInfoWithContent[]>;
   getAssessmentByCode: (code: string) => Promise<AssessmentInfo>;
   getAssessment: (assessmentId: string) => Promise<AssessmentInfo>;
   getAssessments: () => Promise<AssessmentInfo[]>;
@@ -46,4 +42,17 @@ export interface IQtiDataApi {
   ) => Promise<void>;
   getTestContext: (assessmentId: string) => Promise<ExtendedTestContext | null>;
   getStudentSessionInfo: (code: string) => Promise<StudentAppSessionInfo>;
+}
+
+// Define authentication provider interface
+export interface IAuthStudentProvider {
+  authenticate(): Promise<AuthStudentResult>;
+  refreshToken(refreshToken: string): Promise<AuthStudentResult>;
+  getProviderId(): string;
+}
+
+export interface AuthStudentResult {
+  idToken: string;
+  localId: string;
+  refreshToken: string;
 }
