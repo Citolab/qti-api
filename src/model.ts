@@ -86,8 +86,10 @@ export interface ItemStatistics {
   numberCorrect: number;
 }
 
-export interface ItemStatisticsWithResponses extends ItemStatistics {
-  responses: UniqueResponse[];
+export interface ItemStatisticsWithResponses<
+  ResponseType extends UniqueResponse
+> extends ItemStatistics {
+  responses: ResponseType[];
 }
 
 export interface Session {

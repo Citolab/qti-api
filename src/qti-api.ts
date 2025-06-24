@@ -43,26 +43,37 @@ export class QtiApi implements IQtiDataApi {
 
     this.axios.interceptors.request.use((config) => {
       if (this.userInfo?.token) {
-        config.headers["Authorization"] = `Bearer ${this.userInfo.token}`;
+        config.headers!["Authorization"] = `Bearer ${this.userInfo.token}`;
       }
       if (this.appId) {
-        config.headers["x-app"] = this.appId;
+        config.headers!["x-app"] = this.appId;
       }
       if (this.userInfo?.assessment?.assessmentId) {
-        config.headers["x-assessment"] =
-          this.userInfo?.assessment?.assessmentId;
+        config.headers!["x-assessment"] = this.userInfo.assessment.assessmentId;
       }
       if (this.userInfo?.code) {
-        config.headers["x-code"] = this.userInfo.code;
+        config.headers!["x-code"] = this.userInfo.code;
       }
       if (this.userInfo?.identification) {
-        config.headers["x-name"] = this.userInfo.identification;
+        config.headers!["x-name"] = this.userInfo.identification;
       }
       if (this.shouldGetXmlResourceFromDatabase) {
-        config.headers["x-xml-from-db"] = "true";
+        config.headers!["x-xml-from-db"] = "true";
       }
       return config;
     });
+
+    this.axios.interceptors.response.use(
+      (resp) => {
+        const d = resp.data;
+        if (d && typeof d === "object" && "data" in d) {
+          // Replace the entire resp.data with the inner payload
+          return { ...resp, data: (d as any).data };
+        }
+        return resp;
+      },
+      (err) => Promise.reject(err)
+    );
 
     this.axios.interceptors.response.use(
       (response) => {

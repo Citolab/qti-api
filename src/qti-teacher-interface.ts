@@ -8,6 +8,7 @@ import {
   Session,
   ItemStatisticsWithResponses,
   SessionStateType,
+  UniqueResponse,
 } from "./model";
 
 export interface IQtiTeacherApi {
@@ -47,7 +48,7 @@ export interface IQtiTeacherApi {
     assessmentIds?: string[];
   }) => Promise<PlannedSessions<SessionInfoTeacher>[]>;
   createGroupDelivery: (assessmentId: string) => Promise<{
-    groupDeliveryCode: string;
+    groupCode: string;
   }>;
   deleteStudent: (code: string) => Promise<void>;
   resetSession: (code: string, assessmentId: string) => Promise<void>;
@@ -60,7 +61,7 @@ export interface IQtiTeacherApi {
     assessmentId: string,
     session: Session
   ) => Promise<void>;
-  getItemStats<T extends ItemStatisticsWithResponses>(
+  getItemStats<T extends ItemStatisticsWithResponses<UniqueResponse>>(
     assessmentId: string,
     target: "teacher" | "reviewer"
   ): Promise<T[]>;

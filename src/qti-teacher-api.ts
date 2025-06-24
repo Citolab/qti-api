@@ -7,6 +7,7 @@ import {
   SessionInfoTeacher,
   ItemStatisticsWithResponses,
   StudentAppSessionInfo,
+  UniqueResponse,
 } from "./model";
 import { IQtiTeacherApi, ITeacherAuthProvider } from "./qti-teacher-interface";
 import {
@@ -137,6 +138,18 @@ export class QtiTeacherApi implements IQtiTeacherApi {
 
       return config;
     });
+
+    this.axios.interceptors.response.use(
+      (resp) => {
+        const d = resp.data;
+        if (d && typeof d === "object" && "data" in d) {
+          // Replace the entire resp.data with the inner payload
+          return { ...resp, data: (d as any).data };
+        }
+        return resp;
+      },
+      (err) => Promise.reject(err)
+    );
 
     this.axios.interceptors.response.use(
       (response) => {
@@ -371,7 +384,9 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     return result.data;
   }
 
-  public async getItemStats<T extends ItemStatisticsWithResponses>(
+  public async getItemStats<
+    T extends ItemStatisticsWithResponses<UniqueResponse>
+  >(
     assessmentId: string,
     target: "teacher" | "reviewer" = "teacher"
   ): Promise<T[]> {
@@ -392,8 +407,8 @@ export class QtiTeacherApi implements IQtiTeacherApi {
    */
   public async createGroupDelivery(
     assessmentId: string
-  ): Promise<{ groupDeliveryCode: string }> {
-    const result = await this.axios.post<{ groupDeliveryCode: string }>(
+  ): Promise<{ groupCode: string }> {
+    const result = await this.axios.post<{ groupCode: string }>(
       "/teacher/startGroupDelivery",
       { assessmentId }
     );
@@ -402,13 +417,13 @@ export class QtiTeacherApi implements IQtiTeacherApi {
 
   /**
    * Get assessment information by assessment ID
-   * @param assessmentId - The ID of the assessment
+   * @param groupCode - The ID of the assessment
    * @returns Promise containing the assessment information
    */
   public async getAssessmentInfoByGroupCode<T = any>(
-    assessmentId: string
+    groupCode: string
   ): Promise<T> {
-    const result = await this.axios.get<T>(`/assessment/${assessmentId}`);
+    const result = await this.axios.get<T>(`/assessment/${groupCode}`);
     return result.data;
   }
 
