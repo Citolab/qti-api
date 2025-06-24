@@ -14,7 +14,6 @@
     "_test": "jest",
     "lint": "eslint src/**/*.ts",
     "prepublishOnly": "npm run build",
-    "npm publish": "np",
     "release": "np --no-tests"
   },
   "engines": {
