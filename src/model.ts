@@ -137,6 +137,7 @@ export interface ItemInfo {
   calamity?: boolean;
   thumbnail?: string;
   alternativeCount?: number;
+  completionStatus?: "completed" | "incomplete" | "not_attempted" | "unknown";
   navNumber?: number;
   sequenceNumber?: number;
   maxScore?: number;
