@@ -25,7 +25,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   public axios: AxiosInstance = {} as AxiosInstance;
   private _token = "";
   private _refreshToken = "";
-  public apiIUrl: string;
+  public apiUrl: string;
   private appId: string;
   private authProvider: ITeacherAuthProvider;
   private axiosError?: (error: AxiosError) => void;
@@ -55,7 +55,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
       axiosConfig,
     } = options;
 
-    this.apiIUrl = apiIUrl;
+    this.apiUrl = apiIUrl;
     this.appId = appId;
     this.authProvider = authProvider;
     this.externalAxiosConfig = axiosConfig;
@@ -146,7 +146,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     } else {
       // Create new axios instance (original behavior)
       const config: any = {
-        baseURL: this.apiIUrl,
+        baseURL: this.apiUrl,
       };
 
       this.axios = axios.create(config);
@@ -302,7 +302,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
 
       // Create temporary axios instance to check access
       const tempAxios = axios.create({
-        baseURL: this.apiIUrl,
+        baseURL: this.apiUrl,
         headers,
       });
 
@@ -346,13 +346,13 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   async getTestsForApplication(): Promise<AssessmentInfo[]> {
     const response = await this.axios.get<{
       assessments: AssessmentInfo[];
-    }>(removeDoubleSlashes(`${this.apiIUrl}/assessments`));
+    }>(removeDoubleSlashes(`${this.apiUrl}/assessments`));
     return response.data?.assessments || [];
   }
 
   async getPackagesForApplication(): Promise<PackageInfo[]> {
     const response = await this.axios.get<{ packages: PackageInfo[] }>(
-      `${this.apiIUrl}/packages`
+      `${this.apiUrl}/packages`
     );
     return response.data?.packages || [];
   }

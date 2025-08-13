@@ -1,4 +1,7 @@
-import { ResponseInteraction } from "@citolab/qti-components/exports/expression-result.js";
+import {
+  integer,
+  ResponseInteraction,
+} from "@citolab/qti-components/exports/expression-result.js";
 import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
 import { TestContext } from "@citolab/qti-components/qti-test/core";
 import { AxiosInstance } from "axios";
@@ -281,14 +284,16 @@ export interface DeleteResult {
 export interface Delivery {
   id?: string;
   code: string;
-  start: string | null;
-  end: string | null;
-  startTime: string | null;
-  endTime: string | null;
-  students: string;
+  startedAt: integer | null;
+  createdAt: integer | null;
+  finishedAt: integer | null;
+  endTime: integer | null;
   state: DeliveryStateType;
   canStop?: boolean;
   canRestart?: boolean;
+  assessmentId: string;
+  studentsStarted: number;
+  studentsFinished: number;
 }
 
 ///

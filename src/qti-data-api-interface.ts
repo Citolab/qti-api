@@ -7,7 +7,7 @@ import {
 } from "./model";
 
 export interface IQtiDataApi {
-  apiIUrl: string;
+  apiUrl: string;
 
   authenticateByCode: (code: string) => Promise<StudentAppSessionInfo>;
   authenticateByAssessmentCode: (config: {

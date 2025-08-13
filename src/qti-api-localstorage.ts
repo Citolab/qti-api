@@ -9,10 +9,10 @@ import { IQtiDataApi } from "./qti-data-api-interface";
 // This is a wrapper around the QtiApi that stores the data in local storage.
 // Package is retrieved from the server
 export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
-  apiIUrl = "";
+  apiUrl = "";
 
   constructor(public qtiApi: IQtiDataApi) {
-    this.apiIUrl = qtiApi.apiIUrl;
+    this.apiUrl = qtiApi.apiUrl;
   }
   public log(type: string, data: any) {
     console.log(`Action: ${type}`, data);

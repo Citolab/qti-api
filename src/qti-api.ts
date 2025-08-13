@@ -16,7 +16,7 @@ export class QtiApi implements IQtiDataApi {
   private externalAxiosConfig?: AxiosInstanceConfig;
 
   constructor(
-    public apiIUrl: string,
+    public apiUrl: string,
     private appId: string,
     private authProvider: IAuthStudentProvider,
     private shouldGetXmlResourceFromDatabase = false,
@@ -28,12 +28,12 @@ export class QtiApi implements IQtiDataApi {
 
     // get domain from apiUrl
     const apiDomain =
-      apiIUrl.split("/").length > 2 ? apiIUrl.split("/")[2] : apiIUrl;
+      apiUrl.split("/").length > 2 ? apiUrl.split("/")[2] : apiUrl;
     this.userKey = `userInfos-${appId}-${apiDomain}-${authProvider.getProviderId()}`;
     const storedUserInfo = localStorage.getItem(this.userKey);
     // remove / on end if api Url has it
-    if (apiIUrl.endsWith("/")) {
-      this.apiIUrl = apiIUrl.substring(0, apiIUrl.length - 1);
+    if (apiUrl.endsWith("/")) {
+      this.apiUrl = apiUrl.substring(0, apiUrl.length - 1);
     }
     if (storedUserInfo) {
       this.userInfo = JSON.parse(storedUserInfo);
@@ -52,7 +52,7 @@ export class QtiApi implements IQtiDataApi {
     } else {
       // Create new axios instance (original behavior)
       this.axios = axios.create({
-        baseURL: this.apiIUrl,
+        baseURL: this.apiUrl,
       });
       // Always add QTI interceptors for new instances
       this.addQtiInterceptors();
