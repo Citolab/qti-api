@@ -8,6 +8,9 @@ import {
   ItemStatisticsWithResponses,
   StudentAppSessionInfo,
   UniqueResponse,
+  Delivery,
+  AxiosInstanceConfig,
+  PackageInfo,
 } from "./model";
 import { IQtiTeacherApi, ITeacherAuthProvider } from "./qti-teacher-interface";
 import {
@@ -19,7 +22,7 @@ import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
 
 export class QtiTeacherApi implements IQtiTeacherApi {
   private failedRequests = 0;
-  public axios: AxiosInstance = {} as AxiosInstance; // trick compiler
+  public axios: AxiosInstance = {} as AxiosInstance;
   private _token = "";
   private _refreshToken = "";
   public apiIUrl: string;
@@ -28,6 +31,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   private axiosError?: (error: AxiosError) => void;
   private admin = false;
   private checkAccess = true;
+  private externalAxiosConfig?: AxiosInstanceConfig;
 
   constructor(
     public options: {
@@ -37,13 +41,25 @@ export class QtiTeacherApi implements IQtiTeacherApi {
       axiosError?: (error: AxiosError) => void;
       admin?: boolean;
       checkAccess?: boolean;
+      // New option for external axios configuration
+      axiosConfig?: AxiosInstanceConfig;
     }
   ) {
-    const { apiIUrl, appId, authProvider, axiosError, admin, checkAccess } =
-      options;
+    const {
+      apiIUrl,
+      appId,
+      authProvider,
+      axiosError,
+      admin,
+      checkAccess,
+      axiosConfig,
+    } = options;
+
     this.apiIUrl = apiIUrl;
     this.appId = appId;
     this.authProvider = authProvider;
+    this.externalAxiosConfig = axiosConfig;
+
     if (axiosError) {
       this.axiosError = axiosError;
     }
@@ -53,12 +69,13 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     if (checkAccess !== undefined && checkAccess !== null) {
       this.checkAccess = checkAccess;
     }
+
     this.createAxiosInstance();
   }
 
   get token() {
     if (this._token) return this._token;
-    if (localStorage) {
+    if (typeof localStorage !== "undefined") {
       const token =
         localStorage.getItem(`token-${this.authProvider.getProviderId()}`) ||
         "";
@@ -73,7 +90,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
       this._token = value;
 
       this.createAxiosInstance();
-      if (localStorage) {
+      if (typeof localStorage !== "undefined") {
         localStorage.setItem(
           `token-${this.authProvider.getProviderId()}`,
           value
@@ -84,7 +101,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
 
   get refreshToken() {
     if (this._refreshToken) return this._refreshToken;
-    if (localStorage) {
+    if (typeof localStorage !== "undefined") {
       const token =
         localStorage.getItem(`t2-${this.authProvider.getProviderId()}`) || "";
       return token;
@@ -95,7 +112,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   set refreshToken(value: string) {
     if (value) {
       this._refreshToken = value;
-      if (localStorage) {
+      if (typeof localStorage !== "undefined") {
         localStorage.setItem(`t2-${this.authProvider.getProviderId()}`, value);
       }
     }
@@ -109,7 +126,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     this.failedRequests = 0;
 
     // Clear localStorage
-    if (localStorage) {
+    if (typeof localStorage !== "undefined") {
       localStorage.removeItem(`token-${this.authProvider.getProviderId()}`);
       localStorage.removeItem(`t2-${this.authProvider.getProviderId()}`);
       localStorage.removeItem("qti-firestore");
@@ -120,25 +137,111 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   }
 
   private createAxiosInstance() {
-    this.axios = axios.create({
-      baseURL: this.apiIUrl,
-    });
+    if (this.externalAxiosConfig?.instance) {
+      // Use external axios instance
+      this.axios = this.externalAxiosConfig.instance;
 
+      // Add our QTI interceptors (they will be additive unless explicitly clearing)
+      this.addQtiInterceptors();
+    } else {
+      // Create new axios instance (original behavior)
+      const config: any = {
+        baseURL: this.apiIUrl,
+      };
+
+      this.axios = axios.create(config);
+      // Always add QTI interceptors for new instances
+      this.addQtiInterceptors();
+    }
+  }
+
+  private addQtiInterceptors() {
+    const shouldClearInterceptors =
+      this.externalAxiosConfig?.clearInterceptors === true;
+
+    if (shouldClearInterceptors) {
+      // Only clear if explicitly requested
+      this.axios.interceptors.request.clear();
+      this.axios.interceptors.response.clear();
+    }
+
+    // Request interceptor for QTI-specific headers
     this.axios.interceptors.request.use((config) => {
+      // Add QTI-specific headers (these are additive and won't conflict with auth)
       if (this.token) {
-        config.headers["Authorization"] = `Bearer ${this.token}`;
+        config.headers.Authorization = `Bearer ${this.token}`;
       }
       if (this.appId) {
         config.headers["x-app"] = this.appId;
       }
-
       if (this.admin) {
         config.headers["x-admin"] = "true";
       }
-
       return config;
     });
 
+    if (this.externalAxiosConfig?.addAuthenticationInterceptors) {
+      // Response interceptor for QTI-specific token refresh and error handling
+      this.axios.interceptors.response.use(
+        (response) => {
+          // Reset failed requests on successful response
+          this.failedRequests = 0;
+          return response;
+        },
+        async (error: AxiosError) => {
+          // Only handle QTI-specific token refresh if we have a refresh token
+          if (
+            (error.response?.status === 403 ||
+              error.response?.status === 401) &&
+            this.refreshToken &&
+            this.failedRequests === 0
+          ) {
+            this.failedRequests++; // Increment to prevent infinite loops
+            const originalRequest = error.config;
+
+            return getRefreshTokenAndRetry(
+              originalRequest as AxiosRequestConfig & {
+                _retry?: boolean;
+              },
+              error,
+              this.axios,
+              async () => {
+                const authResult = await this.authProvider.refreshToken(
+                  this.refreshToken
+                );
+                // Update tokens
+                this.token = authResult.idToken;
+                if (authResult.refreshToken) {
+                  this.refreshToken = authResult.refreshToken;
+                }
+                return authResult;
+              },
+              // Modified to handle failed refresh attempts
+              (retryError: AxiosError) => {
+                // If refresh also fails, clear tokens and call original error handler
+                if (
+                  retryError.response?.status === 401 ||
+                  retryError.response?.status === 403
+                ) {
+                  this.clearTokensAndReset();
+                }
+                if (this.axiosError) {
+                  this.axiosError(retryError);
+                }
+              }
+            );
+          }
+
+          // Always call the custom error handler if provided
+          if (this.axiosError) {
+            this.axiosError(error);
+          }
+          return Promise.reject(error);
+        }
+      );
+    }
+
+    // Response interceptor for data unwrapping (additive)
     this.axios.interceptors.response.use(
       (resp) => {
         const d = resp.data;
@@ -150,64 +253,11 @@ export class QtiTeacherApi implements IQtiTeacherApi {
       },
       (err) => Promise.reject(err)
     );
-
-    this.axios.interceptors.response.use(
-      (response) => {
-        // Reset failed requests on successful response
-        this.failedRequests = 0;
-        return response;
-      },
-      async (error: AxiosError) => {
-        if (
-          (error.response?.status === 403 || error.response?.status === 401) &&
-          this.refreshToken &&
-          this.failedRequests === 0
-        ) {
-          this.failedRequests++; // Increment to prevent infinite loops
-          const originalRequest = error.config;
-
-          return getRefreshTokenAndRetry(
-            originalRequest as AxiosRequestConfig & {
-              _retry?: boolean;
-            },
-            error,
-            this.axios,
-            async () => {
-              const authResult = await this.authProvider.refreshToken(
-                this.refreshToken
-              );
-              // Update tokens
-              this.token = authResult.idToken;
-              if (authResult.refreshToken) {
-                this.refreshToken = authResult.refreshToken;
-              }
-              return authResult;
-            },
-            // Modified to handle failed refresh attempts
-            (retryError: AxiosError) => {
-              // If refresh also fails, clear tokens and call original error handler
-              if (
-                retryError.response?.status === 401 ||
-                retryError.response?.status === 403
-              ) {
-                this.clearTokensAndReset();
-              }
-              if (this.axiosError) {
-                this.axiosError(retryError);
-              }
-            }
-          );
-        }
-        if (this.axiosError) {
-          this.axiosError(error);
-        }
-        return Promise.reject(error);
-      }
-    );
   }
 
+  // Rest of your methods remain the same...
   log = async (type: string, data: any) => {
-    const response = await this.axios.post("/teacher/log", {
+    const response = await this.axios.post("/log", {
       type,
       data,
     });
@@ -259,7 +309,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
       // now check if the user has rights to access the application
       let hasAccess = true;
       if (this.checkAccess) {
-        const accessResult = await tempAxios.post(`/teacher/access`);
+        const accessResult = await tempAxios.post(`/access`);
         hasAccess = !!accessResult.data?.hasAccess;
       }
 
@@ -293,12 +343,18 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     this.clearTokensAndReset();
   }
 
-  // All the remaining methods stay exactly the same since they only use this.axios
   async getTestsForApplication(): Promise<AssessmentInfo[]> {
     const response = await this.axios.get<{
       assessments: AssessmentInfo[];
-    }>(removeDoubleSlashes(`${this.apiIUrl}/teacher/assessments`));
+    }>(removeDoubleSlashes(`${this.apiIUrl}/assessments`));
     return response.data?.assessments || [];
+  }
+
+  async getPackagesForApplication(): Promise<PackageInfo[]> {
+    const response = await this.axios.get<{ packages: PackageInfo[] }>(
+      `${this.apiIUrl}/packages`
+    );
+    return response.data?.packages || [];
   }
 
   async getAssessmentInfo(assessmentId: string) {
@@ -309,23 +365,23 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   }
 
   public async deleteStudent(code: string): Promise<void> {
-    await this.axios.delete(`/teacher/session/${code}`);
+    await this.axios.delete(`/session/${code}`);
   }
 
   public async addStudentIdentification(
     code: string,
     identification: string
   ): Promise<void> {
-    await this.axios.post(`/teacher/student/update`, {
+    await this.axios.post(`/student/update`, {
       code,
       identification,
     });
   }
 
-  public async resetSession(code: string, asessmentId: string): Promise<void> {
-    await this.axios.post(`/teacher/session/reset`, {
+  public async resetSession(code: string, assessmentId: string): Promise<void> {
+    await this.axios.post(`/session/reset`, {
       code,
-      asessmentId,
+      assessmentId,
     });
   }
 
@@ -334,7 +390,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     assessmentId: string,
     session: Session
   ): Promise<void> {
-    await this.axios.post(`/teacher/session/update`, {
+    await this.axios.post(`/session/update`, {
       code,
       assessmentId,
       session,
@@ -349,7 +405,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     assessmentIds?: string[] | undefined;
   }): Promise<PlannedSessions<SessionInfoTeacher>[]> {
     const result = await this.axios.post<PlannedSessions<SessionInfoTeacher>[]>(
-      "/teacher/plan",
+      "/plan",
       {
         count,
         assessmentIds,
@@ -366,7 +422,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     assessmentIds?: string[] | undefined;
   }): Promise<PlannedSessions<SessionInfoTeacher>[]> {
     const result = await this.axios.post<PlannedSessions<SessionInfoTeacher>[]>(
-      "/teacher/planByIdentification",
+      "/planByIdentification",
       {
         identifiers,
         assessmentIds,
@@ -379,7 +435,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     PlannedSessions<SessionInfoTeacher>[]
   > {
     const result = await this.axios.get<PlannedSessions<SessionInfoTeacher>[]>(
-      "/teacher/students"
+      "/students"
     );
     return result.data;
   }
@@ -391,7 +447,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     target: "teacher" | "reviewer" = "teacher"
   ): Promise<T[]> {
     const result = await this.axios.get<T[]>(
-      `/teacher/assessment/${assessmentId}/itemStats`,
+      `/assessment/${assessmentId}/itemStats`,
       {
         params: {
           role: target,
@@ -402,16 +458,97 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   }
 
   /**
-   * Create a new group groupDeliveryCode/activity
+   * Create a new group delivery/activity
    * @returns Promise containing the generated activity code
    */
   public async createGroupDelivery(
     assessmentId: string
   ): Promise<{ groupCode: string }> {
     const result = await this.axios.post<{ groupCode: string }>(
-      "/teacher/startGroupDelivery",
+      "/startGroupDelivery",
       { assessmentId }
     );
+    return result.data;
+  }
+
+  /**
+   * Start a delivery
+   * @param assessmentId - The assessment ID to start delivery for
+   * @returns Promise containing the delivery information
+   */
+  public async startDelivery(assessmentId: string): Promise<{
+    code: string;
+    assessmentId: string;
+    state: string;
+    startedAt: number;
+  }> {
+    const result = await this.axios.post<{
+      code: string;
+      assessmentId: string;
+      state: string;
+      startedAt: number;
+    }>("/delivery/start", { assessmentId });
+    return result.data;
+  }
+
+  /**
+   * Stop a group delivery
+   * @param deliveryCode - The delivery code to stop
+   * @returns Promise containing the delivery code and finish timestamp
+   */
+  public async stopGroupDelivery(
+    deliveryCode: string
+  ): Promise<{ code: string; finishedAt: number }> {
+    const result = await this.axios.post<{ code: string; finishedAt: number }>(
+      "/delivery/stop",
+      { code: deliveryCode }
+    );
+    return result.data;
+  }
+
+  /**
+   * Restart a group delivery
+   * @param deliveryCode - The delivery code to restart
+   * @returns Promise containing the delivery code, start timestamp and state
+   */
+  public async restartGroupDelivery(
+    deliveryCode: string
+  ): Promise<{ code: string; startedAt: number; state: string }> {
+    const result = await this.axios.post<{
+      code: string;
+      startedAt: number;
+      state: string;
+    }>("/delivery/restart", { code: deliveryCode });
+    return result.data;
+  }
+
+  /**
+   * Get all deliveries for an assessment
+   * @param assessmentId - The assessment ID
+   * @returns Promise containing array of deliveries
+   */
+  public async getGroupDeliveries(assessmentId: string): Promise<Delivery[]> {
+    const result = await this.axios.get<Delivery[]>(
+      `/delivery/getdeliveries/${assessmentId}`
+    );
+    return result.data;
+  }
+
+  /**
+   * Download results as CSV
+   * @param assessmentId - The assessment ID
+   * @param deliveryCode - Optional delivery code to filter results
+   * @returns Promise containing the CSV blob
+   */
+  public async downloadResults(
+    assessmentId: string,
+    deliveryCode?: string
+  ): Promise<Blob> {
+    const params = deliveryCode ? { deliveryCode } : {};
+    const result = await this.axios.get(`/delivery/${assessmentId}/csv`, {
+      params,
+      responseType: "blob",
+    });
     return result.data;
   }
 
@@ -443,7 +580,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     target: "teacher" | "reviewer" = "teacher"
   ) {
     await this.axios.post(
-      `/teacher/assessment/${assessmentId}/itemStats/${itemIdentifier}`,
+      `/assessment/${assessmentId}/itemStats/${itemIdentifier}`,
       {
         responseId,
         scoreExternal,
@@ -456,9 +593,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     T extends ItemContext,
     T2 extends StudentResult<T>[]
   >(assessmentId: string) {
-    const result = await this.axios.get<T2>(
-      `/teacher/assessment/${assessmentId}`
-    );
+    const result = await this.axios.get<T2>(`/assessment/${assessmentId}`);
     return result.data as T2;
   }
 }

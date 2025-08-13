@@ -1,6 +1,7 @@
 import { ResponseInteraction } from "@citolab/qti-components/exports/expression-result.js";
 import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
 import { TestContext } from "@citolab/qti-components/qti-test/core";
+import { AxiosInstance } from "axios";
 
 export type SessionStateType =
   | "not_generated"
@@ -9,6 +10,8 @@ export type SessionStateType =
   | "started"
   | "finished"
   | "scored";
+
+export type DeliveryStateType = "not_started" | "active" | "inactive";
 
 export type AuthenticationMethod =
   | "anonymous"
@@ -49,20 +52,23 @@ export interface ItemResponse {
   interactionResponses: ResponseInteraction[] | null;
   isValid: boolean;
 }
+
+export interface StudentSession {
+  packageId: string;
+  assessmentId: string;
+  assessmentName: string;
+  assessmentHref?: string;
+  sessionState: SessionStateType;
+  itemIds?: string[];
+  canStart?: boolean;
+  startFrom?: number;
+  endAt?: number;
+  startCode?: string;
+}
+
 export interface StudentAppSessionInfo extends UserInfo {
   currentAssessmentId?: string;
-  sessions: {
-    packageId: string;
-    assessmentId: string;
-    assessmentName: string;
-    assessmentHref?: string;
-    sessionState: SessionStateType;
-    itemIds?: string[];
-    canStart?: boolean;
-    startFrom?: number;
-    endAt?: number;
-    startCode?: string;
-  }[];
+  sessions: StudentSession[];
   testGroup?: "experimental" | "control";
 }
 
@@ -167,6 +173,13 @@ export interface AssessmentInfo extends AssessmentBasicInfo {
   startCode?: string;
 }
 
+export interface AssessmentSettings {
+  assessmentId: string;
+  forceFullScreen: boolean;
+  responsive: boolean;
+  backendScoring: boolean;
+}
+
 export interface AsssessmentResource extends PackageResource {
   type: "test";
   items: ItemInfo[];
@@ -194,16 +207,20 @@ export interface Item extends QtiResource {
 }
 
 export interface PackageInfo {
+  id: string;
+  packageId: string;
   name: string;
   itemCount: number;
+  applicationId: string;
   qtiVersion: number;
   created: number;
   createdBy: string;
   createdByUsername: string;
   errorMessage: string;
   bucketname: string;
-  assessments: QtiResource[];
-  items: QtiResource[];
+  downloadUrl?: string;
+  downloadUrlQti3?: string;
+  assessments: AssessmentInfo[];
   packageZip: string;
 }
 
@@ -237,4 +254,49 @@ export interface CheckResponse {
   explanation: string;
   suggestion?: string;
   sentence_part: string;
+}
+
+export type AxiosInstanceConfig = {
+  instance?: AxiosInstance;
+  clearInterceptors?: boolean;
+  addAuthenticationInterceptors?: boolean;
+};
+
+export interface UploadResult {
+  success: boolean;
+  data: PackageInfo;
+  message: string;
+}
+
+export interface PackagesListResult {
+  success: boolean;
+  data: PackageInfo[];
+}
+
+export interface DeleteResult {
+  success: boolean;
+  message: string;
+}
+
+export interface Delivery {
+  id?: string;
+  code: string;
+  start: string | null;
+  end: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  students: string;
+  state: DeliveryStateType;
+  canStop?: boolean;
+  canRestart?: boolean;
+}
+
+///
+
+export interface SessionInfo {
+  userId: string;
+  userName: string;
+  role: string;
+  email?: string;
+  applicationId: string;
 }

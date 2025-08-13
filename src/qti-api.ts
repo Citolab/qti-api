@@ -5,21 +5,27 @@ import {
   AssessmentInfo,
   SessionStateType,
   AuthenticationMethod,
+  AxiosInstanceConfig,
 } from "./model";
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import { IAuthStudentProvider, IQtiDataApi } from "./qti-data-api-interface";
 import { dateId, getRefreshTokenAndRetry } from "./utils";
 export class QtiApi implements IQtiDataApi {
-  public axios: AxiosInstance = {} as AxiosInstance; // trick compiler
+  public axios: AxiosInstance = {} as AxiosInstance;
   public userKey = "";
+  private externalAxiosConfig?: AxiosInstanceConfig;
 
   constructor(
     public apiIUrl: string,
     private appId: string,
     private authProvider: IAuthStudentProvider,
     private shouldGetXmlResourceFromDatabase = false,
-    private axiosError?: (error: AxiosError) => void
+    private axiosError?: (error: AxiosError) => void,
+    // New parameter for axios configuration
+    axiosConfig?: AxiosInstanceConfig
   ) {
+    this.externalAxiosConfig = axiosConfig;
+
     // get domain from apiUrl
     const apiDomain =
       apiIUrl.split("/").length > 2 ? apiIUrl.split("/")[2] : apiIUrl;
@@ -37,10 +43,33 @@ export class QtiApi implements IQtiDataApi {
   }
 
   private createAxiosInstance() {
-    this.axios = axios.create({
-      baseURL: this.apiIUrl,
-    });
+    if (this.externalAxiosConfig?.instance) {
+      // Use external axios instance
+      this.axios = this.externalAxiosConfig.instance;
 
+      // Add our QTI interceptors (they will be additive unless explicitly clearing)
+      this.addQtiInterceptors();
+    } else {
+      // Create new axios instance (original behavior)
+      this.axios = axios.create({
+        baseURL: this.apiIUrl,
+      });
+      // Always add QTI interceptors for new instances
+      this.addQtiInterceptors();
+    }
+  }
+
+  private addQtiInterceptors() {
+    const shouldClearInterceptors =
+      this.externalAxiosConfig?.clearInterceptors === true;
+
+    if (shouldClearInterceptors) {
+      // Only clear if explicitly requested
+      this.axios.interceptors.request.clear();
+      this.axios.interceptors.response.clear();
+    }
+
+    // Request interceptor for QTI-specific headers
     this.axios.interceptors.request.use((config) => {
       if (this.userInfo?.token) {
         config.headers!["Authorization"] = `Bearer ${this.userInfo.token}`;
@@ -63,6 +92,7 @@ export class QtiApi implements IQtiDataApi {
       return config;
     });
 
+    // Response interceptor for data unwrapping (additive)
     this.axios.interceptors.response.use(
       (resp) => {
         const d = resp.data;
@@ -75,64 +105,68 @@ export class QtiApi implements IQtiDataApi {
       (err) => Promise.reject(err)
     );
 
-    this.axios.interceptors.response.use(
-      (response) => {
-        // Do something with successful response
-        return response;
-      },
-      async (error: AxiosError) => {
-        const originalRequest = error.config;
+    if (this.externalAxiosConfig?.addAuthenticationInterceptors !== false) {
+      // Authentication response interceptor (additive, but can be disabled)
+      this.axios.interceptors.response.use(
+        (response) => {
+          // Do something with successful response
+          return response;
+        },
+        async (error: AxiosError) => {
+          const originalRequest = error.config;
 
-        if (
-          (error.response?.status === 403 || error.response?.status === 401) &&
-          this.userInfo?.refreshToken &&
-          !(originalRequest as unknown as { _retry: boolean })._retry
-        ) {
-          (originalRequest as unknown as { _retry: boolean })._retry = true; // Add the _retry flag to prevent infinite loop
-
-          let authenticationMethod: (() => Promise<unknown>) | undefined;
-
-          if (this.userInfo?.authenticationMethod === "anonymous") {
-            authenticationMethod = () => this.authenticateAnonymously();
-          } else if (
-            this._userInfo &&
-            this.userInfo?.authenticationMethod === "code" &&
-            this._userInfo?.code
+          if (
+            (error.response?.status === 403 ||
+              error.response?.status === 401) &&
+            this.userInfo?.refreshToken &&
+            !(originalRequest as unknown as { _retry: boolean })._retry
           ) {
-            authenticationMethod = () =>
-              this.authenticateByCode(this._userInfo!.code);
-          } else if (
-            this._userInfo &&
-            this.userInfo?.authenticationMethod === "assessment" &&
-            this._userInfo?.assessment?.assessmentId
-          ) {
-            authenticationMethod = () =>
-              this.authenticateByAssessmentId({
-                assessmentId: this._userInfo?.assessment?.assessmentId || "",
-                identification: this._userInfo?.identification,
-              });
+            (originalRequest as unknown as { _retry: boolean })._retry = true; // Add the _retry flag to prevent infinite loop
+
+            let authenticationMethod: (() => Promise<unknown>) | undefined;
+
+            if (this.userInfo?.authenticationMethod === "anonymous") {
+              authenticationMethod = () => this.authenticateAnonymously();
+            } else if (
+              this._userInfo &&
+              this.userInfo?.authenticationMethod === "code" &&
+              this._userInfo?.code
+            ) {
+              authenticationMethod = () =>
+                this.authenticateByCode(this._userInfo!.code);
+            } else if (
+              this._userInfo &&
+              this.userInfo?.authenticationMethod === "assessment" &&
+              this._userInfo?.assessment?.assessmentId
+            ) {
+              authenticationMethod = () =>
+                this.authenticateByAssessmentId({
+                  assessmentId: this._userInfo?.assessment?.assessmentId || "",
+                  identification: this._userInfo?.identification,
+                });
+            }
+
+            if (authenticationMethod) {
+              return getRefreshTokenAndRetry(
+                originalRequest as AxiosRequestConfig & {
+                  _retry?: boolean;
+                },
+                error,
+                this.axios,
+                authenticationMethod,
+                this.axiosError
+              );
+            }
           }
 
-          if (authenticationMethod) {
-            return getRefreshTokenAndRetry(
-              originalRequest as AxiosRequestConfig & {
-                _retry?: boolean;
-              },
-              error,
-              this.axios,
-              authenticationMethod,
-              this.axiosError
-            );
+          if (this.axiosError) {
+            this.axiosError(error);
           }
-        }
 
-        if (this.axiosError) {
-          this.axiosError(error);
+          return Promise.reject(error);
         }
-
-        return Promise.reject(error);
-      }
-    );
+      );
+    }
   }
 
   async getAssessment(assessmentId: string) {

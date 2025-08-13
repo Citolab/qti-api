@@ -3,5 +3,7 @@ export * from "./qti-data-api-interface";
 export * from "./qti-api";
 export * from "./qti-api-localstorage";
 export * from "./qti-teacher-interface";
+export * from "./qti-tools-api-interface";
+export * from "./qti-tools-api";
 export * from "./authentication-providers";
 export * from "./model";
