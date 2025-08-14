@@ -1,6 +1,6 @@
 import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
 import {
-  PlannedSessions,
+  PlannedTestset,
   AssessmentInfo,
   StudentResult,
   BaseSession,

@@ -1,6 +1,6 @@
 import {
   AssessmentInfo,
-  PlannedSessions,
+  PlannedTestset,
   ExtendedTestContext,
   SessionStateType,
 } from "./model";
@@ -8,17 +8,12 @@ import {
 export interface IQtiDataApi {
   apiUrl: string;
 
-  authenticateByCode: (code: string) => Promise<PlannedSessions>;
-  authenticateByAssessmentCode: (config: {
-    code: string;
-    identification?: string;
-    metadata?: unknown;
-  }) => Promise<PlannedSessions>;
+  authenticateByCode: (code: string) => Promise<PlannedTestset>;
   authenticateByDeliveryCode: (config: {
     code: string;
     identification?: string;
     metadata?: unknown;
-  }) => Promise<PlannedSessions>;
+  }) => Promise<PlannedTestset>;
   authenticateAnonymously: () => Promise<AuthStudentResult>;
   log: (type: string, data: any) => Promise<void>;
   // TODO
@@ -45,10 +40,10 @@ export interface IQtiDataApi {
     sessionState: SessionStateType
   ) => Promise<void>;
   getTestContext: (assessmentId: string) => Promise<ExtendedTestContext | null>;
-  getStudentSessionInfo: (code: string) => Promise<PlannedSessions>;
+  getStudentSessionInfo: (code: string) => Promise<PlannedTestset>;
   updateStudentSessionInfo: (
     id: string,
-    data: Partial<PlannedSessions>
+    data: Partial<PlannedTestset>
   ) => Promise<void>;
 }
 

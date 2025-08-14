@@ -41,7 +41,6 @@ export interface UserInfo {
   code: string;
   appId: string;
   isDemo?: boolean;
-  assessment?: AssessmentInfo | undefined;
   identification?: string; // name or student id
   password?: string;
 }
@@ -83,12 +82,13 @@ export interface ItemStatisticsWithResponses<
 }
 
 export interface BaseSession {
+  id: string;
   code?: string;
   assessmentId: string;
   sessionState: SessionStateType;
 }
 
-export interface PlannedSessions extends UserInfo {
+export interface PlannedTestset extends UserInfo {
   id: string;
   currentAssessmentId?: string;
   sessions: PlannedSession[];
