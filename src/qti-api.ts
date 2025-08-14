@@ -1,5 +1,5 @@
 import {
-  StudentAppSessionInfo,
+  PlannedSessions,
   UserInfo,
   ExtendedTestContext,
   AssessmentInfo,
@@ -8,7 +8,11 @@ import {
   AxiosInstanceConfig,
 } from "./model";
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
-import { IAuthStudentProvider, IQtiDataApi } from "./qti-data-api-interface";
+import {
+  AuthStudentResult,
+  IAuthStudentProvider,
+  IQtiDataApi,
+} from "./qti-data-api-interface";
 import { dateId, getRefreshTokenAndRetry } from "./utils";
 export class QtiApi implements IQtiDataApi {
   public axios: AxiosInstance = {} as AxiosInstance;
@@ -41,6 +45,12 @@ export class QtiApi implements IQtiDataApi {
       this.createAxiosInstance();
     }
   }
+  updateStudentSessionInfo = async (
+    id: string,
+    data: Partial<PlannedSessions>
+  ) => {
+    await this.axios.put(`/plannedSession/${id}/update`, data);
+  };
 
   private createAxiosInstance() {
     if (this.externalAxiosConfig?.instance) {
@@ -228,7 +238,7 @@ export class QtiApi implements IQtiDataApi {
     }
   }
 
-  authenticateAnonymously = async (): Promise<StudentAppSessionInfo> => {
+  authenticateAnonymously = async (): Promise<AuthStudentResult> => {
     const userInfo = await this.anonymousLogin();
     if (userInfo) {
       this.userInfo = {
@@ -242,7 +252,7 @@ export class QtiApi implements IQtiDataApi {
         code: userInfo.localId || "",
         token: userInfo.idToken,
       };
-      return { ...this.userInfo, sessions: [] };
+      return userInfo;
     } else {
       throw `could not login`;
     }
@@ -252,7 +262,7 @@ export class QtiApi implements IQtiDataApi {
     code: string;
     identification?: string;
     metadata?: unknown;
-  }): Promise<StudentAppSessionInfo> => {
+  }): Promise<PlannedSessions> => {
     const userInfo = await this.anonymousLogin();
     if (userInfo) {
       this.userInfo = {
@@ -266,11 +276,13 @@ export class QtiApi implements IQtiDataApi {
         code: "",
         token: userInfo.idToken,
       };
-      const studentAppSessionInfoData =
-        await this.axios.post<StudentAppSessionInfo>(`/assessment/checkCode`, {
+      const studentAppSessionInfoData = await this.axios.post<PlannedSessions>(
+        `/assessment/checkCode`,
+        {
           code: config.code,
           identification: config.identification || "",
-        });
+        }
+      );
       const studentAppSessionInfo = studentAppSessionInfoData.data;
       if (!studentAppSessionInfo) {
         console.error(`studentAppSessionInfo is undefined`);
@@ -313,9 +325,9 @@ export class QtiApi implements IQtiDataApi {
               sessionState: "not_started",
             },
           ],
-        } as StudentAppSessionInfo;
+        } as PlannedSessions;
       } else {
-        const testSessionInfo = await this.axios.post<StudentAppSessionInfo>(
+        const testSessionInfo = await this.axios.post<PlannedSessions>(
           `/session/start`,
           {
             metadata: config.metadata,
@@ -324,13 +336,110 @@ export class QtiApi implements IQtiDataApi {
           }
         );
         if (testSessionInfo.data) {
-          const studentAppSessionInfo =
-            testSessionInfo.data as StudentAppSessionInfo;
+          const studentAppSessionInfo = testSessionInfo.data as PlannedSessions;
           this.userInfo = {
             ...this.userInfo,
             code: studentAppSessionInfo?.code || "",
             isDemo: studentAppSessionInfo?.isDemo || false,
             assessment: studentAppSessionInfo?.assessment || undefined,
+          };
+        }
+        return studentAppSessionInfo;
+      }
+    } else {
+      throw `could login`;
+    }
+  };
+
+  authenticateByDeliveryCode = async (config: {
+    code: string;
+    identification?: string;
+    metadata?: unknown;
+  }): Promise<PlannedSessions> => {
+    const userInfo = await this.anonymousLogin();
+    if (userInfo) {
+      this.userInfo = {
+        appId: this.appId || "",
+        teacherId: "",
+        userId: userInfo.localId || "",
+        identification: config.identification || "",
+        authenticationMethod: "anonymous",
+        isDemo: false,
+        refreshToken: userInfo.refreshToken,
+        code: "",
+        token: userInfo.idToken,
+      };
+      const studentAppSessionInfoData = await this.axios.post<PlannedSessions>(
+        `/delivery/checkCode`,
+        {
+          code: config.code,
+        }
+      );
+      const studentAppSessionInfo = studentAppSessionInfoData.data;
+      if (!studentAppSessionInfo) {
+        console.error(`studentAppSessionInfo is undefined`);
+        throw `unknown assessment code`;
+      }
+      let assessment = studentAppSessionInfo.assessment;
+      if (!assessment) {
+        const currentSession = studentAppSessionInfo.sessions.find(
+          (c) => c.assessmentId === studentAppSessionInfo.currentAssessmentId
+        );
+        assessment = {
+          assessmentId: currentSession?.assessmentId || "",
+          name: currentSession?.assessmentName || "",
+          packageId: currentSession?.packageId || "",
+          isDemo: studentAppSessionInfo.isDemo,
+        };
+      }
+
+      this.userInfo = {
+        ...this.userInfo,
+        assessment,
+        isDemo: studentAppSessionInfo.isDemo,
+        code: config.code, // <-- Set delivery code here
+      };
+      if (!assessment.assessmentId) {
+        console.error(`assessment.assessmentId is undefined`);
+        throw `unknown assessment code`;
+      }
+
+      if (studentAppSessionInfo.isDemo) {
+        return {
+          appId: this.appId || "",
+          code: config.code, // <-- Return delivery code here
+          teacherId: "",
+          isDemo: true,
+          sessions: [
+            {
+              assessmentId: assessment?.assessmentId || "",
+              assessmentName: assessment?.name || "",
+              packageId: assessment.packageId,
+              sessionState: "not_started",
+            },
+          ],
+        } as PlannedSessions;
+      } else {
+        const testSessionInfo = await this.axios.post<PlannedSessions>(
+          `/session/start`,
+          {
+            metadata: config.metadata,
+            assessmentId: studentAppSessionInfo.assessment?.assessmentId || "",
+            identification: config.identification || "",
+          }
+        );
+        if (testSessionInfo.data) {
+          const studentAppSessionInfo = testSessionInfo.data as PlannedSessions;
+          this.userInfo = {
+            ...this.userInfo,
+            code: studentAppSessionInfo?.code || config.code, // <-- Set delivery code here if available, fallback to input
+            isDemo: studentAppSessionInfo?.isDemo || false,
+            assessment: studentAppSessionInfo?.assessment || undefined,
+          };
+          // Ensure the returned object includes the delivery code
+          return {
+            ...studentAppSessionInfo,
+            code: studentAppSessionInfo.code || config.code, // <-- Return delivery code here
           };
         }
         return studentAppSessionInfo;
@@ -350,11 +459,11 @@ export class QtiApi implements IQtiDataApi {
         identification: "",
         isDemo: false,
         authenticationMethod: "code",
-        code,
+        code: code,
         refreshToken: userInfo.refreshToken,
         token: userInfo.idToken,
       };
-      const testSessionInfo = await this.axios.post<StudentAppSessionInfo>(
+      const testSessionInfo = await this.axios.post<PlannedSessions>(
         `/checkCode`,
         {
           code,
@@ -379,7 +488,7 @@ export class QtiApi implements IQtiDataApi {
           assessment: assessmentInfo,
           teacherId,
           isDemo,
-          code,
+          code: code,
         };
         return testSessionInfo.data;
       } else {
@@ -394,7 +503,7 @@ export class QtiApi implements IQtiDataApi {
     assessmentId: string;
     identification?: string;
     metadata?: unknown;
-  }): Promise<StudentAppSessionInfo> => {
+  }): Promise<PlannedSessions> => {
     const userInfo = await this.anonymousLogin();
     if (userInfo) {
       this.userInfo = {
@@ -409,7 +518,7 @@ export class QtiApi implements IQtiDataApi {
         code: "",
         token: userInfo.idToken,
       };
-      const testSessionInfo = await this.axios.post<StudentAppSessionInfo>(
+      const testSessionInfo = await this.axios.post<PlannedSessions>(
         `/session/start`,
         {
           metadata: config.metadata,
@@ -418,8 +527,7 @@ export class QtiApi implements IQtiDataApi {
         }
       );
       if (testSessionInfo.data) {
-        const studentAppSessionInfo =
-          testSessionInfo.data as StudentAppSessionInfo;
+        const studentAppSessionInfo = testSessionInfo.data as PlannedSessions;
         this.userInfo = {
           ...this.userInfo,
           code: studentAppSessionInfo?.code || "",
@@ -457,9 +565,7 @@ export class QtiApi implements IQtiDataApi {
   };
 
   getStudentProgress = async () => {
-    const response = await this.axios.get<StudentAppSessionInfo>(
-      "session/info"
-    );
+    const response = await this.axios.get<PlannedSessions>("session/info");
     return response.data;
   };
 
@@ -504,12 +610,9 @@ export class QtiApi implements IQtiDataApi {
   }
 
   getStudentSessionInfo = async (code: string) => {
-    const sessionInfo = await this.axios.post<StudentAppSessionInfo>(
-      `/checkCode`,
-      {
-        code,
-      }
-    );
+    const sessionInfo = await this.axios.post<PlannedSessions>(`/checkCode`, {
+      code,
+    });
     return sessionInfo.data;
   };
 

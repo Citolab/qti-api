@@ -1,16 +1,14 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import {
-  PlannedSessions,
   AssessmentInfo,
   StudentResult,
-  Session,
-  SessionInfoTeacher,
+  BaseSession,
   ItemStatisticsWithResponses,
-  StudentAppSessionInfo,
   UniqueResponse,
   Delivery,
   AxiosInstanceConfig,
   PackageInfo,
+  PlannedSession,
 } from "./model";
 import { IQtiTeacherApi, ITeacherAuthProvider } from "./qti-teacher-interface";
 import {
@@ -388,7 +386,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   public async updateSession(
     code: string,
     assessmentId: string,
-    session: Session
+    session: BaseSession
   ): Promise<void> {
     await this.axios.post(`/session/update`, {
       code,
@@ -403,14 +401,11 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   }: {
     count?: number | undefined;
     assessmentIds?: string[] | undefined;
-  }): Promise<PlannedSessions<SessionInfoTeacher>[]> {
-    const result = await this.axios.post<PlannedSessions<SessionInfoTeacher>[]>(
-      "/plan",
-      {
-        count,
-        assessmentIds,
-      }
-    );
+  }): Promise<PlannedSession[]> {
+    const result = await this.axios.post<PlannedSession[]>("/plan", {
+      count,
+      assessmentIds,
+    });
     return result.data;
   }
 
@@ -420,8 +415,8 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   }: {
     identifiers: string[];
     assessmentIds?: string[] | undefined;
-  }): Promise<PlannedSessions<SessionInfoTeacher>[]> {
-    const result = await this.axios.post<PlannedSessions<SessionInfoTeacher>[]>(
+  }): Promise<PlannedSession[]> {
+    const result = await this.axios.post<PlannedSession[]>(
       "/planByIdentification",
       {
         identifiers,
@@ -431,12 +426,8 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     return result.data;
   }
 
-  public async getPlannedSessions(): Promise<
-    PlannedSessions<SessionInfoTeacher>[]
-  > {
-    const result = await this.axios.get<PlannedSessions<SessionInfoTeacher>[]>(
-      "/students"
-    );
+  public async getPlannedSessions(): Promise<PlannedSession[]> {
+    const result = await this.axios.get<PlannedSession[]>("/students");
     return result.data;
   }
 

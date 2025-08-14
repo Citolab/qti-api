@@ -56,25 +56,6 @@ export interface ItemResponse {
   isValid: boolean;
 }
 
-export interface StudentSession {
-  packageId: string;
-  assessmentId: string;
-  assessmentName: string;
-  assessmentHref?: string;
-  sessionState: SessionStateType;
-  itemIds?: string[];
-  canStart?: boolean;
-  startFrom?: number;
-  endAt?: number;
-  startCode?: string;
-}
-
-export interface StudentAppSessionInfo extends UserInfo {
-  currentAssessmentId?: string;
-  sessions: StudentSession[];
-  testGroup?: "experimental" | "control";
-}
-
 export interface StudentResult<T extends ItemContext> {
   code: string;
   score: number;
@@ -101,20 +82,28 @@ export interface ItemStatisticsWithResponses<
   responses: ResponseType[];
 }
 
-export interface Session {
-  code: string;
+export interface BaseSession {
+  code?: string;
   assessmentId: string;
   sessionState: SessionStateType;
 }
 
-export interface PlannedSessions<T extends Session> {
-  code: string;
-  identification?: string; // name or student id
-  sessions: T[];
+export interface PlannedSessions extends UserInfo {
+  id: string;
+  currentAssessmentId?: string;
+  sessions: PlannedSession[];
+  testGroup?: "experimental" | "control";
 }
 
-export interface SessionInfoTeacher extends Session {
-  testScore: number;
+export interface PlannedSession extends BaseSession {
+  packageId: string;
+  assessmentName: string;
+  assessmentHref?: string;
+  itemIds?: string[];
+  canStart?: boolean;
+  startFrom?: number;
+  endAt?: number;
+  testScore?: number;
 }
 
 // QTI PACKAGE MODEL

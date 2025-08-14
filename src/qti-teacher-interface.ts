@@ -2,15 +2,13 @@ import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
 import {
   PlannedSessions,
   AssessmentInfo,
-  ItemInfo,
   StudentResult,
-  SessionInfoTeacher,
-  Session,
+  BaseSession,
   ItemStatisticsWithResponses,
-  SessionStateType,
   UniqueResponse,
   Delivery,
   PackageInfo,
+  PlannedSession,
 } from "./model";
 import { AxiosInstance } from "axios";
 
@@ -47,11 +45,11 @@ export interface IQtiTeacherApi {
   planStudents: (config: {
     count?: number;
     assessmentIds?: string[];
-  }) => Promise<PlannedSessions<SessionInfoTeacher>[]>;
+  }) => Promise<PlannedSession[]>;
   planStudentsByIdentification: (config: {
     identifiers: string[];
     assessmentIds?: string[];
-  }) => Promise<PlannedSessions<SessionInfoTeacher>[]>;
+  }) => Promise<PlannedSession[]>;
 
   // delivery management
   createGroupDelivery: (assessmentId: string) => Promise<{
@@ -82,7 +80,7 @@ export interface IQtiTeacherApi {
   updateSession: (
     code: string,
     assessmentId: string,
-    session: Session
+    session: BaseSession
   ) => Promise<void>;
 
   // statistics and results
@@ -104,7 +102,7 @@ export interface IQtiTeacherApi {
   getStudentResults: <T extends ItemContext, T2 extends StudentResult<T>[]>(
     assessmentId: string
   ) => Promise<T2>;
-  getPlannedSessions: () => Promise<PlannedSessions<SessionInfoTeacher>[]>;
+  getPlannedSessions: () => Promise<PlannedSession[]>;
 }
 
 export interface ITeacherAuthProvider {
