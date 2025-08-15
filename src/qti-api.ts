@@ -2,7 +2,7 @@ import {
   PlannedTestset,
   UserInfo,
   ExtendedTestContext,
-  AssessmentInfo,
+  Assessment,
   SessionStateType,
   AuthenticationMethod,
   AxiosInstanceConfig,
@@ -166,14 +166,14 @@ export class QtiApi implements IQtiDataApi {
   }
 
   async getAssessment(assessmentId: string) {
-    const value = await this.axios.get<AssessmentInfo>(
+    const value = await this.axios.get<Assessment>(
       `/assessment/${assessmentId}`
     );
     return value.data;
   }
 
   public async getAssessments() {
-    const value = await this.axios.get<AssessmentInfo[]>("/assessments");
+    const value = await this.axios.get<Assessment[]>("/assessments");
     return value.data;
   }
 
@@ -426,7 +426,7 @@ export class QtiApi implements IQtiDataApi {
   };
 
   getAssessmentByCode = async (code: string) => {
-    const assessmentInfo = await this.axios.get<AssessmentInfo>(
+    const assessmentInfo = await this.axios.get<Assessment>(
       `/assessment/code/${code}`
     );
     if (assessmentInfo.data) {

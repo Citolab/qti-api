@@ -1,7 +1,7 @@
 import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
 import {
   PlannedTestset,
-  AssessmentInfo,
+  Assessment,
   StudentResult,
   BaseSession,
   ItemStatisticsWithResponses,
@@ -37,7 +37,7 @@ export interface IQtiTeacherApi {
   } | null>;
 
   // assessment packages
-  getTestsForApplication: () => Promise<AssessmentInfo[]>;
+  getTestsForApplication: () => Promise<Assessment[]>;
   getPackagesForApplication: () => Promise<PackageInfo[]>;
   log: (type: string, data: any) => Promise<void>;
 
@@ -97,8 +97,8 @@ export interface IQtiTeacherApi {
   ) => Promise<void>;
 
   // assessment info
-  getAssessmentInfo: (assessmentId: string) => Promise<AssessmentInfo>;
-  getAssessmentInfoByGroupCode: (groupCode: string) => Promise<AssessmentInfo>;
+  getAssessmentInfo: (assessmentId: string) => Promise<Assessment>;
+  getAssessmentInfoByGroupCode: (groupCode: string) => Promise<Assessment>;
   getStudentResults: <T extends ItemContext, T2 extends StudentResult<T>[]>(
     assessmentId: string
   ) => Promise<T2>;

@@ -1,6 +1,6 @@
 // Import AssessmentInfo from your existing model
 import {
-  AssessmentInfo,
+  Assessment,
   AssessmentSettings,
   DeleteResult,
   PackageInfo,

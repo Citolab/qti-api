@@ -1,5 +1,5 @@
 import {
-  AssessmentInfo,
+  Assessment,
   PlannedTestset,
   ExtendedTestContext,
   SessionStateType,
@@ -28,9 +28,9 @@ export interface IQtiDataApi {
     action: string,
     payload?: unknown
   ) => Promise<void>;
-  getAssessmentByCode: (code: string) => Promise<AssessmentInfo>;
-  getAssessment: (assessmentId: string) => Promise<AssessmentInfo>;
-  getAssessments: () => Promise<AssessmentInfo[]>;
+  getAssessmentByCode: (code: string) => Promise<Assessment>;
+  getAssessment: (assessmentId: string) => Promise<Assessment>;
+  getAssessments: () => Promise<Assessment[]>;
   setTestContext: (
     assessmentId: string,
     context: ExtendedTestContext

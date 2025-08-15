@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import {
-  AssessmentInfo,
+  Assessment,
   StudentResult,
   BaseSession,
   ItemStatisticsWithResponses,
@@ -341,9 +341,9 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     this.clearTokensAndReset();
   }
 
-  async getTestsForApplication(): Promise<AssessmentInfo[]> {
+  async getTestsForApplication(): Promise<Assessment[]> {
     const response = await this.axios.get<{
-      assessments: AssessmentInfo[];
+      assessments: Assessment[];
     }>(removeDoubleSlashes(`${this.apiUrl}/assessments`));
     return response.data?.assessments || [];
   }
@@ -356,7 +356,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   }
 
   async getAssessmentInfo(assessmentId: string) {
-    const value = await this.axios.get<AssessmentInfo>(
+    const value = await this.axios.get<Assessment>(
       `/assessment/${assessmentId}`
     );
     return value.data;

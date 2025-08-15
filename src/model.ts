@@ -22,6 +22,12 @@ export type AuthenticationMethod =
   | "assessment"
   | "group_code";
 
+export interface ObjectBase {
+  CreatedAt: number;
+  UpdatedAt: number;
+  CreatedBy: string;
+}
+
 export interface ExtendedItemContext extends ItemContext {
   scoreType?: string;
 }
@@ -88,7 +94,7 @@ export interface BaseSession {
   sessionState: SessionStateType;
 }
 
-export interface PlannedTestset extends UserInfo {
+export interface PlannedTestset extends UserInfo, ObjectBase {
   id: string;
   currentAssessmentId?: string;
   sessions: PlannedSession[];
@@ -153,9 +159,9 @@ export interface AssessmentBasicInfo {
   name: string;
 }
 
-export interface AssessmentInfo extends AssessmentBasicInfo {
+export interface Assessment extends AssessmentBasicInfo, ObjectBase {
   assessmentHref?: string;
-  items?: AssessmentItemRefInfo<ItemInfo>[];
+  items: AssessmentItemRefInfo<ItemInfo>[];
   isDemo?: boolean;
   teacherId?: string;
   packageName?: string;
@@ -198,21 +204,18 @@ export interface Item extends QtiResource {
   isDeleted: boolean;
 }
 
-export interface PackageInfo {
+export interface PackageInfo extends ObjectBase {
   id: string;
   packageId: string;
   name: string;
   itemCount: number;
   applicationId: string;
   qtiVersion: number;
-  created: number;
-  createdBy: string;
-  createdByUsername: string;
   errorMessage: string;
   bucketname: string;
   downloadUrl?: string;
   downloadUrlQti3?: string;
-  assessments: AssessmentInfo[];
+  assessments: Assessment[];
   packageZip: string;
 }
 
@@ -224,7 +227,7 @@ export interface QtiResource {
 export interface ApplicationInfo {
   name: string;
   demoCodes: string[];
-  assessments: AssessmentInfo[];
+  assessments: Assessment[];
 }
 
 export interface ApplicationInfoWithUsers extends ApplicationInfo {
@@ -270,11 +273,10 @@ export interface DeleteResult {
   message: string;
 }
 
-export interface Delivery {
+export interface Delivery extends ObjectBase {
   id?: string;
   code: string;
   startedAt: integer | null;
-  createdAt: integer | null;
   finishedAt: integer | null;
   endTime: integer | null;
   state: DeliveryStateType;
