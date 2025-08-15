@@ -23,9 +23,9 @@ export type AuthenticationMethod =
   | "group_code";
 
 export interface ObjectBase {
-  CreatedAt: number;
-  UpdatedAt: number;
-  CreatedBy: string;
+  createdAt: number;
+  updatedAt: number;
+  createdBy: string;
 }
 
 export interface ExtendedItemContext extends ItemContext {
