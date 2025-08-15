@@ -77,6 +77,7 @@ export interface IQtiTeacherApi {
     code: string,
     identification: string
   ) => Promise<void>;
+
   updateSession: (
     code: string,
     assessmentId: string,

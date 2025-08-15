@@ -173,7 +173,6 @@ export interface Assessment extends AssessmentBasicInfo, ObjectBase {
 }
 
 export interface AssessmentSettings {
-  assessmentId: string;
   forceFullScreen: boolean;
   responsive: boolean;
   backendScoring: boolean;
