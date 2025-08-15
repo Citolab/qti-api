@@ -169,6 +169,7 @@ export interface Assessment extends AssessmentBasicInfo, ObjectBase {
   startFrom?: number;
   endAt?: number;
   startCode?: string;
+  settings?: AssessmentSettings;
 }
 
 export interface AssessmentSettings {
