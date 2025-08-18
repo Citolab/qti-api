@@ -36,17 +36,13 @@ export interface IQtiTeacherApi {
   } | null>;
 
   // assessment packages
-  getTestsForApplication: () => Promise<Assessment[]>;
-  getPackagesForApplication: () => Promise<PackageInfo[]>;
+  getAssessments: () => Promise<Assessment[]>;
+  getPackages: () => Promise<PackageInfo[]>;
   log: (type: string, data: any) => Promise<void>;
 
   // planning
   planStudents: (config: {
     count?: number;
-    assessmentIds?: string[];
-  }) => Promise<Session[]>;
-  planStudentsByIdentification: (config: {
-    identifiers: string[];
     assessmentIds?: string[];
   }) => Promise<Session[]>;
 
@@ -84,9 +80,7 @@ export interface IQtiTeacherApi {
     score: number | null,
     target: "teacher" | "reviewer"
   ) => Promise<void>;
-
-  // assessment info
-  getAssessmentInfo: (assessmentId: string) => Promise<Assessment>;
+  getAssessment: (assessmentId: string) => Promise<Assessment>;
   getStudentResults: <T extends ItemContext, T2 extends StudentResult<T>[]>(
     assessmentId: string
   ) => Promise<T2>;

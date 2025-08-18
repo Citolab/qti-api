@@ -341,21 +341,21 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     this.clearTokensAndReset();
   }
 
-  async getTestsForApplication(): Promise<Assessment[]> {
+  async getAssessments(): Promise<Assessment[]> {
     const response = await this.axios.get<{
       assessments: Assessment[];
     }>(removeDoubleSlashes(`${this.apiUrl}/assessments`));
     return response.data?.assessments || [];
   }
 
-  async getPackagesForApplication(): Promise<PackageInfo[]> {
+  async getPackages(): Promise<PackageInfo[]> {
     const response = await this.axios.get<{ packages: PackageInfo[] }>(
       `${this.apiUrl}/packages`
     );
     return response.data?.packages || [];
   }
 
-  async getAssessmentInfo(assessmentId: string) {
+  async getAssessment(assessmentId: string) {
     const value = await this.axios.get<Assessment>(
       `/assessment/${assessmentId}`
     );
@@ -413,21 +413,6 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     });
     return result.data;
   }
-
-  public async planStudentsByIdentification({
-    identifiers,
-    assessmentIds,
-  }: {
-    identifiers: string[];
-    assessmentIds?: string[] | undefined;
-  }): Promise<Session[]> {
-    const result = await this.axios.post<Session[]>("/planByIdentification", {
-      identifiers,
-      assessmentIds,
-    });
-    return result.data;
-  }
-
   public async getSessions(): Promise<Session[]> {
     const result = await this.axios.get<Session[]>("/students");
     return result.data;

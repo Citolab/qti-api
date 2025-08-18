@@ -4,6 +4,8 @@ import { ITeacherAuthProvider } from "./qti-teacher-interface";
 import { getRefreshTokenAndRetry } from "./utils";
 import { IQtiToolsApi } from "./qti-tools-api-interface";
 import {
+  Assessment,
+  AssessmentSettings,
   AxiosInstanceConfig,
   DeleteResult,
   PackageInfo,
@@ -354,5 +356,15 @@ export class QtiToolsApi implements IQtiToolsApi {
   async getPackageInfo(packageId: string): Promise<PackageInfo> {
     const response = await this.axios.get<PackageInfo>(`/package/${packageId}`);
     return response.data;
+  }
+
+  async updateAssessmentSettings(
+    assessmentId: string,
+    settings: AssessmentSettings
+  ): Promise<any> {
+    await this.axios.post(`/assessment/${assessmentId}/settings`, settings, {
+      timeout: 60000, // 60 seconds timeout for potential reprocessing
+    });
+    return;
   }
 }
