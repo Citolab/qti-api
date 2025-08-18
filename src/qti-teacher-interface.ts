@@ -1,6 +1,5 @@
 import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
 import {
-  PlannedTestset,
   Assessment,
   StudentResult,
   BaseSession,
@@ -8,7 +7,7 @@ import {
   UniqueResponse,
   Delivery,
   PackageInfo,
-  PlannedSession,
+  Session,
 } from "./model";
 import { AxiosInstance } from "axios";
 
@@ -45,34 +44,23 @@ export interface IQtiTeacherApi {
   planStudents: (config: {
     count?: number;
     assessmentIds?: string[];
-  }) => Promise<PlannedSession[]>;
+  }) => Promise<Session[]>;
   planStudentsByIdentification: (config: {
     identifiers: string[];
     assessmentIds?: string[];
-  }) => Promise<PlannedSession[]>;
+  }) => Promise<Session[]>;
 
   // delivery management
-  createGroupDelivery: (assessmentId: string) => Promise<{
-    groupCode: string;
-  }>;
-  stopGroupDelivery: (deliveryCode: string) => Promise<{
-    code: string;
-    finishedAt: number;
-  }>;
-  restartGroupDelivery: (deliveryCode: string) => Promise<{
-    code: string;
-    startedAt: number;
-    state: string;
-  }>;
-  getGroupDeliveries: (assessmentId: string) => Promise<Delivery[]>;
-  downloadResults: (
-    assessmentId: string,
-    deliveryCode?: string
-  ) => Promise<Blob>;
-
+  createDelivery: (assessmentId: string) => Promise<Delivery>;
+  stopDelivery: (deliveryCode: string) => Promise<Delivery>;
+  startDelivery: (deliveryCode: string) => Promise<Delivery>;
+  getAssessmentDeliveries: (assessmentId: string) => Promise<Delivery[]>;
+  downloadResultsByDeliveryCode: (deliveryCode: string) => Promise<Blob>;
+  downloadResultsByAssessmentId: (assessmentId: string) => Promise<Blob>;
   // session management
   deleteStudent: (code: string) => Promise<void>;
-  resetSession: (code: string, assessmentId: string) => Promise<void>;
+  resetSession: (code: string) => Promise<void>;
+  reopenSession: (code: string) => Promise<void>;
   addStudentIdentification: (
     code: string,
     identification: string
@@ -99,11 +87,10 @@ export interface IQtiTeacherApi {
 
   // assessment info
   getAssessmentInfo: (assessmentId: string) => Promise<Assessment>;
-  getAssessmentInfoByGroupCode: (groupCode: string) => Promise<Assessment>;
   getStudentResults: <T extends ItemContext, T2 extends StudentResult<T>[]>(
     assessmentId: string
   ) => Promise<T2>;
-  getPlannedSessions: () => Promise<PlannedSession[]>;
+  getSessions: () => Promise<Session[]>;
 }
 
 export interface ITeacherAuthProvider {

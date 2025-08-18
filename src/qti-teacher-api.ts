@@ -8,7 +8,7 @@ import {
   Delivery,
   AxiosInstanceConfig,
   PackageInfo,
-  PlannedSession,
+  Session,
 } from "./model";
 import { IQtiTeacherApi, ITeacherAuthProvider } from "./qti-teacher-interface";
 import {
@@ -376,10 +376,15 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     });
   }
 
-  public async resetSession(code: string, assessmentId: string): Promise<void> {
+  public async resetSession(code: string): Promise<void> {
     await this.axios.post(`/session/reset`, {
       code,
-      assessmentId,
+    });
+  }
+
+  public async reopenSession(code: string): Promise<void> {
+    await this.axios.post(`/session/reopen`, {
+      code,
     });
   }
 
@@ -401,8 +406,8 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   }: {
     count?: number | undefined;
     assessmentIds?: string[] | undefined;
-  }): Promise<PlannedSession[]> {
-    const result = await this.axios.post<PlannedSession[]>("/plan", {
+  }): Promise<Session[]> {
+    const result = await this.axios.post<Session[]>("/plan", {
       count,
       assessmentIds,
     });
@@ -415,19 +420,16 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   }: {
     identifiers: string[];
     assessmentIds?: string[] | undefined;
-  }): Promise<PlannedSession[]> {
-    const result = await this.axios.post<PlannedSession[]>(
-      "/planByIdentification",
-      {
-        identifiers,
-        assessmentIds,
-      }
-    );
+  }): Promise<Session[]> {
+    const result = await this.axios.post<Session[]>("/planByIdentification", {
+      identifiers,
+      assessmentIds,
+    });
     return result.data;
   }
 
-  public async getPlannedSessions(): Promise<PlannedSession[]> {
-    const result = await this.axios.get<PlannedSession[]>("/students");
+  public async getSessions(): Promise<Session[]> {
+    const result = await this.axios.get<Session[]>("/students");
     return result.data;
   }
 
@@ -452,14 +454,18 @@ export class QtiTeacherApi implements IQtiTeacherApi {
    * Create a new group delivery/activity
    * @returns Promise containing the generated activity code
    */
-  public async createGroupDelivery(
-    assessmentId: string
-  ): Promise<{ groupCode: string }> {
-    const result = await this.axios.post<{ groupCode: string }>(
-      "/startGroupDelivery",
-      { assessmentId }
-    );
-    return result.data;
+  public async createDelivery(assessmentId: string): Promise<Delivery> {
+    const result = await this.axios.post<{
+      success: boolean;
+      data: Delivery;
+      message: string;
+    }>("/delivery/create", {
+      assessmentId,
+    });
+    if (!result.data?.success) {
+      throw new Error(result.data?.message || "Failed to create delivery");
+    }
+    return result.data?.data;
   }
 
   /**
@@ -467,19 +473,17 @@ export class QtiTeacherApi implements IQtiTeacherApi {
    * @param assessmentId - The assessment ID to start delivery for
    * @returns Promise containing the delivery information
    */
-  public async startDelivery(assessmentId: string): Promise<{
-    code: string;
-    assessmentId: string;
-    state: string;
-    startedAt: number;
-  }> {
+  public async startDelivery(assessmentId: string): Promise<Delivery> {
     const result = await this.axios.post<{
-      code: string;
-      assessmentId: string;
-      state: string;
-      startedAt: number;
+      success: boolean;
+      data: Delivery;
+      message: string;
     }>("/delivery/start", { assessmentId });
-    return result.data;
+
+    if (!result.data?.success) {
+      throw new Error(result.data?.message || "Failed to start delivery");
+    }
+    return result.data?.data;
   }
 
   /**
@@ -487,30 +491,16 @@ export class QtiTeacherApi implements IQtiTeacherApi {
    * @param deliveryCode - The delivery code to stop
    * @returns Promise containing the delivery code and finish timestamp
    */
-  public async stopGroupDelivery(
-    deliveryCode: string
-  ): Promise<{ code: string; finishedAt: number }> {
-    const result = await this.axios.post<{ code: string; finishedAt: number }>(
-      "/delivery/stop",
-      { code: deliveryCode }
-    );
-    return result.data;
-  }
-
-  /**
-   * Restart a group delivery
-   * @param deliveryCode - The delivery code to restart
-   * @returns Promise containing the delivery code, start timestamp and state
-   */
-  public async restartGroupDelivery(
-    deliveryCode: string
-  ): Promise<{ code: string; startedAt: number; state: string }> {
+  public async stopDelivery(deliveryCode: string): Promise<Delivery> {
     const result = await this.axios.post<{
-      code: string;
-      startedAt: number;
-      state: string;
-    }>("/delivery/restart", { code: deliveryCode });
-    return result.data;
+      success: boolean;
+      data: Delivery;
+      message: string;
+    }>("/delivery/stop", { code: deliveryCode });
+    if (!result.data?.success) {
+      throw new Error(result.data?.message || "Failed to stop delivery");
+    }
+    return result.data?.data;
   }
 
   /**
@@ -518,9 +508,11 @@ export class QtiTeacherApi implements IQtiTeacherApi {
    * @param assessmentId - The assessment ID
    * @returns Promise containing array of deliveries
    */
-  public async getGroupDeliveries(assessmentId: string): Promise<Delivery[]> {
+  public async getAssessmentDeliveries(
+    assessmentId: string
+  ): Promise<Delivery[]> {
     const result = await this.axios.get<Delivery[]>(
-      `/delivery/getdeliveries/${assessmentId}`
+      `/assessment/${assessmentId}/deliveries`
     );
     return result.data;
   }
@@ -531,27 +523,21 @@ export class QtiTeacherApi implements IQtiTeacherApi {
    * @param deliveryCode - Optional delivery code to filter results
    * @returns Promise containing the CSV blob
    */
-  public async downloadResults(
-    assessmentId: string,
-    deliveryCode?: string
+  public async downloadResultsByDeliveryCode(
+    deliveryCode: string
   ): Promise<Blob> {
-    const params = deliveryCode ? { deliveryCode } : {};
-    const result = await this.axios.get(`/delivery/${assessmentId}/csv`, {
-      params,
+    const result = await this.axios.get(`/delivery/${deliveryCode}/csv`, {
       responseType: "blob",
     });
     return result.data;
   }
 
-  /**
-   * Get assessment information by assessment ID
-   * @param groupCode - The ID of the assessment
-   * @returns Promise containing the assessment information
-   */
-  public async getAssessmentInfoByGroupCode<T = any>(
-    groupCode: string
-  ): Promise<T> {
-    const result = await this.axios.get<T>(`/assessment/${groupCode}`);
+  public async downloadResultsByAssessmentId(
+    assessmentId: string
+  ): Promise<Blob> {
+    const result = await this.axios.get(`/assessment/${assessmentId}/csv`, {
+      responseType: "blob",
+    });
     return result.data;
   }
 

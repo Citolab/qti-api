@@ -23,6 +23,7 @@ export type AuthenticationMethod =
   | "group_code";
 
 export interface ObjectBase {
+  id: string;
   createdAt: number;
   updatedAt: number;
   createdBy: string;
@@ -87,24 +88,19 @@ export interface ItemStatisticsWithResponses<
   responses: ResponseType[];
 }
 
-export interface BaseSession {
-  id: string;
-  code?: string;
+export interface BaseSession extends ObjectBase {
+  code: string;
+  deliveryId?: string;
   assessmentId: string;
   sessionState: SessionStateType;
+  identification?: string;
 }
 
-export interface PlannedTestset extends UserInfo, ObjectBase {
-  id: string;
-  currentAssessmentId?: string;
-  sessions: PlannedSession[];
-  testGroup?: "experimental" | "control";
-}
-
-export interface PlannedSession extends BaseSession {
+export interface Session extends BaseSession {
   packageId: string;
   assessmentName: string;
   assessmentHref?: string;
+  isDemo?: boolean;
   itemIds?: string[];
   canStart?: boolean;
   startFrom?: number;
@@ -274,7 +270,6 @@ export interface DeleteResult {
 }
 
 export interface Delivery extends ObjectBase {
-  id?: string;
   code: string;
   startedAt: integer | null;
   finishedAt: integer | null;
@@ -285,14 +280,4 @@ export interface Delivery extends ObjectBase {
   assessmentId: string;
   studentsStarted: number;
   studentsFinished: number;
-}
-
-///
-
-export interface SessionInfo {
-  userId: string;
-  userName: string;
-  role: string;
-  email?: string;
-  applicationId: string;
 }

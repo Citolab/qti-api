@@ -1,5 +1,5 @@
 import {
-  PlannedTestset,
+  Session,
   UserInfo,
   ExtendedTestContext,
   SessionStateType,
@@ -18,14 +18,11 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
     code: string;
     identification?: string;
     metadata?: unknown;
-  }): Promise<PlannedTestset> => {
+  }): Promise<Session> => {
     return this.qtiApi.authenticateByDeliveryCode(config);
   };
 
-  updateStudentSessionInfo = async (
-    id: string,
-    data: Partial<PlannedTestset>
-  ) => {
+  updateStudentSessionInfo = async (id: string, data: Partial<Session>) => {
     await this.qtiApi.updateStudentSessionInfo(id, data);
   };
   public log(type: string, data: any) {
@@ -66,10 +63,6 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
     return this.qtiApi.authenticateByCode(code);
   };
 
-  getAssessmentByCode = async (code: string) => {
-    return this.qtiApi.getAssessmentByCode(code);
-  };
-
   authenticateAnonymously = async () => {
     return this.qtiApi.authenticateAnonymously();
   };
@@ -78,7 +71,7 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
     // TODO: update this when storing responses?
     const stored = localStorage.getItem(`${this.userInfo?.code}_progress`);
     if (stored) {
-      return JSON.parse(stored) as PlannedTestset;
+      return JSON.parse(stored) as Session;
     }
     return null;
   };

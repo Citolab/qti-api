@@ -1,5 +1,5 @@
 import {
-  PlannedTestset,
+  Session,
   UserInfo,
   ExtendedTestContext,
   Assessment,
@@ -45,10 +45,7 @@ export class QtiApi implements IQtiDataApi {
       this.createAxiosInstance();
     }
   }
-  updateStudentSessionInfo = async (
-    id: string,
-    data: Partial<PlannedTestset>
-  ) => {
+  updateStudentSessionInfo = async (id: string, data: Partial<Session>) => {
     await this.axios.put(`/plannedSession/${id}/update`, data);
   };
 
@@ -248,7 +245,7 @@ export class QtiApi implements IQtiDataApi {
     code: string;
     identification?: string;
     metadata?: unknown;
-  }): Promise<PlannedTestset> => {
+  }): Promise<Session> => {
     const userInfo = await this.anonymousLogin();
     if (userInfo) {
       this.userInfo = {
@@ -262,30 +259,27 @@ export class QtiApi implements IQtiDataApi {
         code: "",
         token: userInfo.idToken,
       };
-      const studentAppSessionInfoData = await this.axios.post<PlannedTestset>(
+      const sessionResponse = await this.axios.post<Session>(
         `/delivery/checkCode`,
         {
           code: config.code,
         }
       );
-      const studentAppSessionInfo = studentAppSessionInfoData.data;
-      if (!studentAppSessionInfo) {
+      const currentSession = sessionResponse.data;
+      if (!currentSession) {
         console.error(`studentAppSessionInfo is undefined`);
         throw `unknown assessment code`;
       }
-      const currentSession = studentAppSessionInfo.sessions.find(
-        (c) => c.assessmentId === studentAppSessionInfo.currentAssessmentId
-      );
       const assessment = {
         assessmentId: currentSession?.assessmentId || "",
         name: currentSession?.assessmentName || "",
         packageId: currentSession?.packageId || "",
-        isDemo: studentAppSessionInfo.isDemo,
+        isDemo: currentSession.isDemo,
       };
 
       this.userInfo = {
         ...this.userInfo,
-        isDemo: studentAppSessionInfo.isDemo,
+        isDemo: currentSession.isDemo,
         code: config.code, // <-- Set delivery code here
       };
       if (!assessment.assessmentId) {
@@ -293,23 +287,25 @@ export class QtiApi implements IQtiDataApi {
         throw `unknown assessment code`;
       }
 
-      if (studentAppSessionInfo.isDemo) {
+      if (currentSession.isDemo) {
+        const randomId = Math.random().toString(36).substring(2, 15);
         return {
+          id: `demo-${randomId}`,
+          createdAt: Date.now(),
+          createdBy: this.userInfo.userId,
+          updatedAt: Date.now(),
+          userId: this.userInfo.userId,
           appId: this.appId || "",
           code: config.code, // <-- Return delivery code here
           teacherId: "",
           isDemo: true,
-          sessions: [
-            {
-              assessmentId: assessment?.assessmentId || "",
-              assessmentName: assessment?.name || "",
-              packageId: assessment.packageId,
-              sessionState: "not_started",
-            },
-          ],
-        } as PlannedTestset;
+          assessmentId: assessment?.assessmentId || "",
+          assessmentName: assessment?.name || "",
+          packageId: assessment.packageId,
+          sessionState: "not_started",
+        } as Session;
       } else {
-        const testSessionInfo = await this.axios.post<PlannedTestset>(
+        const testSessionInfo = await this.axios.post<Session>(
           `/session/start`,
           {
             metadata: config.metadata,
@@ -317,19 +313,19 @@ export class QtiApi implements IQtiDataApi {
           }
         );
         if (testSessionInfo.data) {
-          const studentAppSessionInfo = testSessionInfo.data as PlannedTestset;
+          const currentSession = testSessionInfo.data as Session;
           this.userInfo = {
             ...this.userInfo,
-            code: studentAppSessionInfo?.code || config.code, // <-- Set delivery code here if available, fallback to input
-            isDemo: studentAppSessionInfo?.isDemo || false,
+            code: currentSession?.code || config.code, // <-- Set delivery code here if available, fallback to input
+            isDemo: currentSession?.isDemo || false,
           };
           // Ensure the returned object includes the delivery code
           return {
-            ...studentAppSessionInfo,
-            code: studentAppSessionInfo.code || config.code, // <-- Return delivery code here
+            ...currentSession,
+            code: currentSession.code || config.code, // <-- Return delivery code here
           };
         }
-        return studentAppSessionInfo;
+        return currentSession;
       }
     } else {
       throw `could login`;
@@ -350,32 +346,20 @@ export class QtiApi implements IQtiDataApi {
         refreshToken: userInfo.refreshToken,
         token: userInfo.idToken,
       };
-      const testSessionInfo = await this.axios.post<PlannedTestset>(
-        `/checkCode`,
-        {
-          code,
-        }
-      );
-      if (testSessionInfo.data) {
+      const sessionData = await this.axios.post<Session>(`/checkCode`, {
+        code,
+      });
+      const session = sessionData.data;
+      if (session) {
         // const asessments = await this.getAssessments();
-        const firstUnfinishedSession = testSessionInfo.data.sessions.find(
-          (s) =>
-            s.sessionState !== "not_available" &&
-            s.sessionState !== "finished" &&
-            s.sessionState !== "scored"
-        );
-        const assessmentInfo = firstUnfinishedSession;
-        // const assessment = asessments.find(
-        //   (a) => assessmentId === a.assessmentId
-        // );
-        const { teacherId, isDemo } = testSessionInfo.data;
+        const { createdBy, isDemo } = session;
         this.userInfo = {
           ...this.userInfo,
-          teacherId,
+          teacherId: createdBy,
           isDemo,
           code: code,
         };
-        return testSessionInfo.data;
+        return session;
       } else {
         throw `could find session`;
       }
@@ -388,7 +372,7 @@ export class QtiApi implements IQtiDataApi {
     assessmentId: string;
     identification?: string;
     metadata?: unknown;
-  }): Promise<PlannedTestset> => {
+  }): Promise<Session> => {
     const userInfo = await this.anonymousLogin();
     if (userInfo) {
       this.userInfo = {
@@ -403,23 +387,20 @@ export class QtiApi implements IQtiDataApi {
         code: "",
         token: userInfo.idToken,
       };
-      const testSessionInfo = await this.axios.post<PlannedTestset>(
-        `/session/start`,
-        {
-          metadata: config.metadata,
-          assessmentId: config.assessmentId,
-          identification: config.identification || "",
-        }
-      );
-      if (testSessionInfo.data) {
-        const studentAppSessionInfo = testSessionInfo.data as PlannedTestset;
+      const sessionData = await this.axios.post<Session>(`/session/start`, {
+        metadata: config.metadata,
+        assessmentId: config.assessmentId,
+        identification: config.identification || "",
+      });
+      const session = sessionData.data as Session;
+      if (session) {
         this.userInfo = {
           ...this.userInfo,
-          code: studentAppSessionInfo?.code || "",
-          isDemo: studentAppSessionInfo?.isDemo || false,
+          code: session?.code || "",
+          isDemo: session?.isDemo || false,
         };
       }
-      return testSessionInfo.data;
+      return session;
     } else {
       throw `could login`;
     }
@@ -449,7 +430,7 @@ export class QtiApi implements IQtiDataApi {
   };
 
   getStudentProgress = async () => {
-    const response = await this.axios.get<PlannedTestset>("session/info");
+    const response = await this.axios.get<Session>("session/info");
     return response.data;
   };
 
@@ -494,7 +475,7 @@ export class QtiApi implements IQtiDataApi {
   }
 
   getStudentSessionInfo = async (code: string) => {
-    const sessionInfo = await this.axios.post<PlannedTestset>(`/checkCode`, {
+    const sessionInfo = await this.axios.post<Session>(`/checkCode`, {
       code,
     });
     return sessionInfo.data;
