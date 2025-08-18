@@ -34,11 +34,4 @@ export interface IQtiToolsApi {
   getPackages: () => Promise<PackagesListResult>;
   deletePackage: (packageId: string) => Promise<DeleteResult>;
   getPackageInfo: (packageId: string) => Promise<PackageInfo>;
-
-  // Assessment settings methods (if needed for tools API)
-  getAssessmentSettings?: (assessmentId: string) => Promise<void>;
-  updateAssessmentSettings?: (
-    assessmentId: string,
-    settings: AssessmentSettings
-  ) => Promise<void>;
 }

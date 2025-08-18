@@ -355,22 +355,4 @@ export class QtiToolsApi implements IQtiToolsApi {
     const response = await this.axios.get<PackageInfo>(`/package/${packageId}`);
     return response.data;
   }
-
-  // Optional assessment settings methods
-  async getAssessmentSettings(assessmentId: string): Promise<any> {
-    const response = await this.axios.get(
-      `/assessment/${assessmentId}/settings`
-    );
-    return response.data;
-  }
-
-  async updateAssessmentSettings(
-    assessmentId: string,
-    settings: any
-  ): Promise<any> {
-    await this.axios.post(`/assessment/${assessmentId}/settings`, settings, {
-      timeout: 60000, // 60 seconds timeout for potential reprocessing
-    });
-    return;
-  }
 }
