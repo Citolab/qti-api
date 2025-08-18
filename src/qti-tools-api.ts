@@ -175,7 +175,17 @@ export class QtiToolsApi implements IQtiToolsApi {
       (resp) => {
         const d = resp.data;
         if (d && typeof d === "object" && "data" in d) {
-          return { ...resp, data: (d as any).data };
+          // Check if the API response indicates failure
+          if ("success" in d && d.success === false) {
+            // Throw an error with the API's message
+            const errorMessage = d.message || "API request failed";
+            throw new Error(errorMessage);
+          }
+
+          // Only unwrap if success is true (or success field doesn't exist)
+          if (!("success" in d) || d.success === true) {
+            return { ...resp, data: (d as any).data };
+          }
         }
         return resp;
       },
