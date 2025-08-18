@@ -271,13 +271,11 @@ export interface DeleteResult {
 
 export interface Delivery extends ObjectBase {
   code: string;
-  startedAt: integer | null;
-  finishedAt: integer | null;
-  endTime: integer | null;
+  startedAt?: integer;
+  finishedAt?: integer;
+  endTime?: integer;
   state: DeliveryStateType;
   canStop?: boolean;
   canRestart?: boolean;
   assessmentId: string;
-  studentsStarted: number;
-  studentsFinished: number;
 }
