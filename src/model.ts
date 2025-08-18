@@ -174,6 +174,7 @@ export interface AssessmentSettings {
   forceFullScreen: boolean;
   responsive: boolean;
   backendScoring: boolean;
+  studentIdentification: boolean;
 }
 
 export interface AsssessmentResource extends PackageResource {
