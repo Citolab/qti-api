@@ -304,24 +304,12 @@ export class QtiTeacherApi implements IQtiTeacherApi {
         headers,
       });
 
-      // now check if the user has rights to access the application
-      let hasAccess = true;
-      if (this.checkAccess) {
-        const accessResult = await tempAxios.post(`/access`);
-        hasAccess = !!accessResult.data?.hasAccess;
+      // Set tokens and recreate axios instance
+      this.token = authResult.idToken;
+      if (authResult.refreshToken) {
+        this.refreshToken = authResult.refreshToken;
       }
-
-      if (hasAccess) {
-        // Set tokens and recreate axios instance
-        this.token = authResult.idToken;
-        if (authResult.refreshToken) {
-          this.refreshToken = authResult.refreshToken;
-        }
-        return authResult;
-      } else {
-        console.error("no access");
-        return null;
-      }
+      return authResult;
     } catch (e) {
       console.error(e);
       return null;
