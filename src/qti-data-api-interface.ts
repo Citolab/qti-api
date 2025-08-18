@@ -1,6 +1,7 @@
 import {
   Assessment,
   ExtendedTestContext,
+  LogEntry,
   Session,
   SessionStateType,
 } from "./model";
@@ -15,13 +16,8 @@ export interface IQtiDataApi {
     metadata?: unknown;
   }) => Promise<Session>;
   authenticateAnonymously: () => Promise<AuthStudentResult>;
-  log: (type: string, data: any) => Promise<void>;
-  // TODO
-  // authenticateByGroupCode: (
-  //   code: string,
-  //   metadata?: unknown
-  // ) => Promise<StudentAppSessionInfo>;
-
+  logWithoutSession: (type: string, data: LogEntry) => Promise<void>;
+  logForSession: (type: string, entry: LogEntry) => Promise<void>;
   logout: () => void;
   logAction: (
     assessmentId: string,

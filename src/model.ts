@@ -90,6 +90,7 @@ export interface ItemStatisticsWithResponses<
 
 export interface BaseSession extends ObjectBase {
   code: string;
+  teacherId: string;
   deliveryId?: string;
   assessmentId: string;
   sessionState: SessionStateType;

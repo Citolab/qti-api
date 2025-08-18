@@ -6,6 +6,7 @@ import {
   SessionStateType,
   AuthenticationMethod,
   AxiosInstanceConfig,
+  LogEntry,
 } from "./model";
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import {
@@ -426,8 +427,20 @@ export class QtiApi implements IQtiDataApi {
     }
   };
 
-  log = async (type: string, data: any) => {
+  logWithoutSession = async (type: string, data: LogEntry) => {
     const response = await this.axios.post("/student/log", {
+      type,
+      data,
+    });
+    if (response.data) {
+      return response.data;
+    } else {
+      throw "Could not log student activity";
+    }
+  };
+
+  logForSession = async (type: string, data: LogEntry) => {
+    const response = await this.axios.post("/student/session/log", {
       type,
       data,
     });
