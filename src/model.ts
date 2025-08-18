@@ -235,10 +235,9 @@ export interface ApplicationInfoWithUsers extends ApplicationInfo {
   }[];
 }
 
-export interface EventLog {
-  action: string;
-  timestamp: number;
-  parameters?: { [key: string]: string };
+export interface LogEntry extends ObjectBase {
+  type: string;
+  data: any;
 }
 
 export interface CheckResponse {

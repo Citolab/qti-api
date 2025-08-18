@@ -9,6 +9,7 @@ import {
   AxiosInstanceConfig,
   PackageInfo,
   Session,
+  LogEntry,
 } from "./model";
 import { IQtiTeacherApi, ITeacherAuthProvider } from "./qti-teacher-interface";
 import {
@@ -263,7 +264,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   }
 
   // Rest of your methods remain the same...
-  log = async (type: string, data: any) => {
+  log = async (type: string, data: LogEntry) => {
     const response = await this.axios.post("/log", {
       type,
       data,
