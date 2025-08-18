@@ -43,7 +43,7 @@ export interface IQtiTeacherApi {
   // planning
   planStudents: (config: {
     count?: number;
-    assessmentIds?: string[];
+    deliveryCodes: string[];
   }) => Promise<Session[]>;
 
   // delivery management

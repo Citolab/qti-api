@@ -400,14 +400,14 @@ export class QtiTeacherApi implements IQtiTeacherApi {
 
   public async planStudents({
     count,
-    assessmentIds,
+    deliveryCodes,
   }: {
     count?: number | undefined;
-    assessmentIds?: string[] | undefined;
+    deliveryCodes?: string[] | undefined;
   }): Promise<Session[]> {
     const result = await this.axios.post<Session[]>("/plan", {
       count,
-      assessmentIds,
+      deliveryCodes,
     });
     return result.data;
   }

@@ -303,6 +303,7 @@ export class QtiApi implements IQtiDataApi {
           id: `demo-${randomId}`,
           createdAt: Date.now(),
           createdBy: this.userInfo.userId,
+          deliveryId: "1234567890",
           updatedAt: Date.now(),
           userId: this.userInfo.userId,
           appId: this.appId || "",
