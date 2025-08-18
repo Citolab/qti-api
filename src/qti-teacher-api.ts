@@ -244,8 +244,17 @@ export class QtiTeacherApi implements IQtiTeacherApi {
       (resp) => {
         const d = resp.data;
         if (d && typeof d === "object" && "data" in d) {
-          // Replace the entire resp.data with the inner payload
-          return { ...resp, data: (d as any).data };
+          // Check if the API response indicates failure
+          if ("success" in d && d.success === false) {
+            // Throw an error with the API's message
+            const errorMessage = d.message || "API request failed";
+            throw new Error(errorMessage);
+          }
+
+          // Only unwrap if success is true (or success field doesn't exist)
+          if (!("success" in d) || d.success === true) {
+            return { ...resp, data: (d as any).data };
+          }
         }
         return resp;
       },
@@ -329,21 +338,21 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     this.clearTokensAndReset();
   }
 
-  async getTestsForApplication(): Promise<Assessment[]> {
+  async getAssessments(): Promise<Assessment[]> {
     const response = await this.axios.get<{
       assessments: Assessment[];
     }>(removeDoubleSlashes(`${this.apiUrl}/assessments`));
     return response.data?.assessments || [];
   }
 
-  async getPackagesForApplication(): Promise<PackageInfo[]> {
+  async getPackages(): Promise<PackageInfo[]> {
     const response = await this.axios.get<{ packages: PackageInfo[] }>(
       `${this.apiUrl}/packages`
     );
     return response.data?.packages || [];
   }
 
-  async getAssessmentInfo(assessmentId: string) {
+  async getAssessment(assessmentId: string) {
     const value = await this.axios.get<Assessment>(
       `/assessment/${assessmentId}`
     );
@@ -401,21 +410,6 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     });
     return result.data;
   }
-
-  public async planStudentsByIdentification({
-    identifiers,
-    assessmentIds,
-  }: {
-    identifiers: string[];
-    assessmentIds?: string[] | undefined;
-  }): Promise<Session[]> {
-    const result = await this.axios.post<Session[]>("/planByIdentification", {
-      identifiers,
-      assessmentIds,
-    });
-    return result.data;
-  }
-
   public async getSessions(): Promise<Session[]> {
     const result = await this.axios.get<Session[]>("/students");
     return result.data;
@@ -443,17 +437,14 @@ export class QtiTeacherApi implements IQtiTeacherApi {
    * @returns Promise containing the generated activity code
    */
   public async createDelivery(assessmentId: string): Promise<Delivery> {
-    const result = await this.axios.post<{
-      success: boolean;
-      data: Delivery;
-      message: string;
-    }>("/delivery/create", {
+    const result = await this.axios.post<Delivery>("/delivery/create", {
       assessmentId,
     });
-    if (!result.data?.success) {
-      throw new Error(result.data?.message || "Failed to create delivery");
-    }
-    return result.data?.data;
+    return result.data;
+  }
+
+  public async deleteDelivery(deliveryCode: string): Promise<void> {
+    await this.axios.delete(`/delivery/${deliveryCode}`);
   }
 
   /**
@@ -462,16 +453,10 @@ export class QtiTeacherApi implements IQtiTeacherApi {
    * @returns Promise containing the delivery information
    */
   public async startDelivery(assessmentId: string): Promise<Delivery> {
-    const result = await this.axios.post<{
-      success: boolean;
-      data: Delivery;
-      message: string;
-    }>("/delivery/start", { assessmentId });
-
-    if (!result.data?.success) {
-      throw new Error(result.data?.message || "Failed to start delivery");
-    }
-    return result.data?.data;
+    const result = await this.axios.post<Delivery>("/delivery/start", {
+      assessmentId,
+    });
+    return result.data;
   }
 
   /**
@@ -480,15 +465,10 @@ export class QtiTeacherApi implements IQtiTeacherApi {
    * @returns Promise containing the delivery code and finish timestamp
    */
   public async stopDelivery(deliveryCode: string): Promise<Delivery> {
-    const result = await this.axios.post<{
-      success: boolean;
-      data: Delivery;
-      message: string;
-    }>("/delivery/stop", { code: deliveryCode });
-    if (!result.data?.success) {
-      throw new Error(result.data?.message || "Failed to stop delivery");
-    }
-    return result.data?.data;
+    const result = await this.axios.post<Delivery>("/delivery/stop", {
+      code: deliveryCode,
+    });
+    return result.data;
   }
 
   /**

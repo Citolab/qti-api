@@ -4,6 +4,8 @@ import { ITeacherAuthProvider } from "./qti-teacher-interface";
 import { getRefreshTokenAndRetry } from "./utils";
 import { IQtiToolsApi } from "./qti-tools-api-interface";
 import {
+  Assessment,
+  AssessmentSettings,
   AxiosInstanceConfig,
   DeleteResult,
   PackageInfo,
@@ -173,7 +175,17 @@ export class QtiToolsApi implements IQtiToolsApi {
       (resp) => {
         const d = resp.data;
         if (d && typeof d === "object" && "data" in d) {
-          return { ...resp, data: (d as any).data };
+          // Check if the API response indicates failure
+          if ("success" in d && d.success === false) {
+            // Throw an error with the API's message
+            const errorMessage = d.message || "API request failed";
+            throw new Error(errorMessage);
+          }
+
+          // Only unwrap if success is true (or success field doesn't exist)
+          if (!("success" in d) || d.success === true) {
+            return { ...resp, data: (d as any).data };
+          }
         }
         return resp;
       },
@@ -356,17 +368,9 @@ export class QtiToolsApi implements IQtiToolsApi {
     return response.data;
   }
 
-  // Optional assessment settings methods
-  async getAssessmentSettings(assessmentId: string): Promise<any> {
-    const response = await this.axios.get(
-      `/assessment/${assessmentId}/settings`
-    );
-    return response.data;
-  }
-
   async updateAssessmentSettings(
     assessmentId: string,
-    settings: any
+    settings: AssessmentSettings
   ): Promise<any> {
     await this.axios.post(`/assessment/${assessmentId}/settings`, settings, {
       timeout: 60000, // 60 seconds timeout for potential reprocessing

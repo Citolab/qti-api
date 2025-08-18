@@ -30,15 +30,12 @@ export interface IQtiDataApi {
   ) => Promise<void>;
   getAssessment: (assessmentId: string) => Promise<Assessment>;
   getAssessments: () => Promise<Assessment[]>;
-  setTestContext: (
-    assessmentId: string,
-    context: ExtendedTestContext
-  ) => Promise<void>;
+  setTestContext: (code: string, context: ExtendedTestContext) => Promise<void>;
   setSessionState: (
-    assessmentId: string,
+    code: string,
     sessionState: SessionStateType
   ) => Promise<void>;
-  getTestContext: (assessmentId: string) => Promise<ExtendedTestContext | null>;
+  getTestContext: (code: string) => Promise<ExtendedTestContext | null>;
   getStudentSessionInfo: (code: string) => Promise<Session>;
   updateStudentSessionInfo: (
     id: string,

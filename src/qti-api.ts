@@ -101,8 +101,17 @@ export class QtiApi implements IQtiDataApi {
       (resp) => {
         const d = resp.data;
         if (d && typeof d === "object" && "data" in d) {
-          // Replace the entire resp.data with the inner payload
-          return { ...resp, data: (d as any).data };
+          // Check if the API response indicates failure
+          if ("success" in d && d.success === false) {
+            // Throw an error with the API's message
+            const errorMessage = d.message || "API request failed";
+            throw new Error(errorMessage);
+          }
+
+          // Only unwrap if success is true (or success field doesn't exist)
+          if (!("success" in d) || d.success === true) {
+            return { ...resp, data: (d as any).data };
+          }
         }
         return resp;
       },
@@ -260,7 +269,7 @@ export class QtiApi implements IQtiDataApi {
         token: userInfo.idToken,
       };
       const sessionResponse = await this.axios.post<Session>(
-        `/delivery/checkCode`,
+        `/delivery/session/start`,
         {
           code: config.code,
         }
@@ -346,7 +355,7 @@ export class QtiApi implements IQtiDataApi {
         refreshToken: userInfo.refreshToken,
         token: userInfo.idToken,
       };
-      const sessionData = await this.axios.post<Session>(`/checkCode`, {
+      const sessionData = await this.axios.post<Session>(`/session/start`, {
         code,
       });
       const session = sessionData.data;
@@ -448,25 +457,25 @@ export class QtiApi implements IQtiDataApi {
   // This might be faster to do directly from the client.
   // tried that with the firestore REST api but becasue you cannot just post and get the object
   // (you have to post and get in firebase format: { fields: { ... } } you should do this using the firebase npm package)
-  async setTestContext(assessmentId: string, context: ExtendedTestContext) {
+  async setTestContext(code: string, context: ExtendedTestContext) {
     await this.axios.post<ExtendedTestContext>(
-      `/session/${assessmentId}/context`,
+      `/session/${code}/context`,
       context
     );
   }
 
-  async setSessionState(assessmentId: string, sessionState: SessionStateType) {
+  async setSessionState(code: string, sessionState: SessionStateType) {
     const content = { sessionState };
     await this.axios.post<{ content: { sessionState: SessionStateType } }>(
-      `/session/${assessmentId}/sessionState`,
+      `/session/${code}/sessionState`,
       content
     );
   }
 
-  async getTestContext(assessmentId: string) {
+  async getTestContext(code: string) {
     try {
       const testContext = await this.axios.get<ExtendedTestContext>(
-        `/session/${assessmentId}/context`
+        `/session/${code}/context`
       );
       return testContext?.data?.items ? testContext.data : null;
     } catch (error) {

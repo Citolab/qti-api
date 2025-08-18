@@ -83,18 +83,18 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
   // This might be faster to do directly from the client.
   // tried that with the firestore REST api but becasue you cannot just post and get the object
   // (you have to post and get in firebase format: { fields: { ... } } you should do this using the firebase npm package)
-  async setTestContext(assessmentId: string, context: ExtendedTestContext) {
-    const key = `${this.userInfo?.code}_${assessmentId}_context`;
+  async setTestContext(code: string, context: ExtendedTestContext) {
+    const key = `${code}_context`;
     localStorage.setItem(key, JSON.stringify(context));
   }
 
-  async setSessionState(assessmentId: string, sessionState: SessionStateType) {
+  async setSessionState(code: string, sessionState: SessionStateType) {
     //TODO
-    console.log(assessmentId, sessionState);
+    console.log(code, sessionState);
   }
 
-  async getTestContext(assessmentId: string) {
-    const key = `${this.userInfo?.code}_${assessmentId}_context`;
+  async getTestContext(code: string) {
+    const key = `${code}}_context`;
     const stored = localStorage.getItem(key);
     if (stored) {
       return JSON.parse(stored) as ExtendedTestContext;
