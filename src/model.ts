@@ -159,6 +159,7 @@ export interface Assessment extends AssessmentBasicInfo, ObjectBase {
   assessmentHref?: string;
   items: AssessmentItemRefInfo<ItemInfo>[];
   isDemo?: boolean;
+  demoCode?: string;
   teacherId?: string;
   packageName?: string;
   canStart?: boolean;
