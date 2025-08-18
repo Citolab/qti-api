@@ -379,44 +379,6 @@ export class QtiApi implements IQtiDataApi {
     }
   };
 
-  authenticateByAssessmentId = async (config: {
-    assessmentId: string;
-    identification?: string;
-    metadata?: unknown;
-  }): Promise<Session> => {
-    const userInfo = await this.anonymousLogin();
-    if (userInfo) {
-      this.userInfo = {
-        appId: this.appId || "",
-        teacherId: "",
-        userId: userInfo.localId || "",
-        identification: config.identification || "",
-        // assessmentId: config.assessmentId,
-        authenticationMethod: "anonymous",
-        isDemo: false,
-        refreshToken: userInfo.refreshToken,
-        code: "",
-        token: userInfo.idToken,
-      };
-      const sessionData = await this.axios.post<Session>(`/session/start`, {
-        metadata: config.metadata,
-        assessmentId: config.assessmentId,
-        identification: config.identification || "",
-      });
-      const session = sessionData.data as Session;
-      if (session) {
-        this.userInfo = {
-          ...this.userInfo,
-          code: session?.code || "",
-          isDemo: session?.isDemo || false,
-        };
-      }
-      return session;
-    } else {
-      throw `could login`;
-    }
-  };
-
   getAssessmentByCode = async (code: string) => {
     const assessmentInfo = await this.axios.get<Assessment>(
       `/assessment/code/${code}`
