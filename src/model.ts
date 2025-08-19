@@ -240,8 +240,10 @@ export interface ApplicationInfoWithUsers extends ApplicationInfo {
 export interface LogEntry extends ObjectBase {
   type: string;
   data: any;
+  userId?: string;
+  deliveryId?: string;
+  code?: string;
 }
-
 export interface CheckResponse {
   sentence: string;
   explanation: string;
