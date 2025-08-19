@@ -16,8 +16,7 @@ export interface IQtiDataApi {
     metadata?: unknown;
   }) => Promise<Session>;
   authenticateAnonymously: () => Promise<AuthStudentResult>;
-  logWithoutSession: (type: string, data: LogEntry) => Promise<void>;
-  logForSession: (type: string, entry: LogEntry) => Promise<void>;
+  log: (type: string, entry: LogEntry) => Promise<void>;
   logout: () => void;
   logAction: (
     assessmentId: string,

@@ -25,12 +25,8 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
   updateStudentSessionInfo = async (id: string, data: Partial<Session>) => {
     await this.qtiApi.updateStudentSessionInfo(id, data);
   };
-  public logWithoutSession(type: string, data: any) {
-    console.log(`Action: ${type}`, data);
-    return Promise.resolve();
-  }
 
-  public logForSession(type: string, data: any) {
+  public log(type: string, data: any) {
     console.log(`Action: ${type}`, data);
     return Promise.resolve();
   }
