@@ -240,7 +240,7 @@ export interface ApplicationInfoWithUsers extends ApplicationInfo {
 export interface LogEntry extends ObjectBase {
   type: string;
   data: any;
-  userId?: string;
+  teacherId?: string;
   deliveryId?: string;
   code?: string;
 }
