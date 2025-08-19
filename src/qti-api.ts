@@ -428,14 +428,6 @@ export class QtiApi implements IQtiDataApi {
     );
   }
 
-  async setSessionState(code: string, sessionState: SessionStateType) {
-    const content = { sessionState };
-    await this.axios.post<{ content: { sessionState: SessionStateType } }>(
-      `/session/${code}/sessionState`,
-      content
-    );
-  }
-
   async getTestContext(code: string) {
     try {
       const testContext = await this.axios.get<ExtendedTestContext>(

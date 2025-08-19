@@ -88,12 +88,6 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
     const key = `${code}_context`;
     localStorage.setItem(key, JSON.stringify(context));
   }
-
-  async setSessionState(code: string, sessionState: SessionStateType) {
-    //TODO
-    console.log(code, sessionState);
-  }
-
   async getTestContext(code: string) {
     const key = `${code}}_context`;
     const stored = localStorage.getItem(key);
