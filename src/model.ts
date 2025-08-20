@@ -272,7 +272,6 @@ export interface DeleteResult {
 }
 
 export interface Delivery extends ObjectBase {
-  code: string;
   startedAt?: integer;
   finishedAt?: integer;
   endTime?: integer;
