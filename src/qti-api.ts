@@ -255,127 +255,82 @@ export class QtiApi implements IQtiDataApi {
     code: string;
     identification?: string;
     metadata?: unknown;
+    loginAnonymouslyBeforeCheck?: boolean;
   }): Promise<Session> => {
-    const userInfo = await this.anonymousLogin();
-    if (userInfo) {
-      this.userInfo = {
+    if (!this.userInfo) {
+      throw `userInfo is undefined,  please call authenticateAnonymously first`;
+    }
+    const sessionResponse = await this.axios.post<Session>(
+      `/delivery/session/start`,
+      {
+        code: config.code,
+      }
+    );
+    const currentSession = sessionResponse.data;
+    if (!currentSession) {
+      console.error(`studentAppSessionInfo is undefined`);
+      throw `unknown assessment code`;
+    }
+    const assessment = {
+      assessmentId: currentSession?.assessmentId || "",
+      name: currentSession?.assessmentName || "",
+      packageId: currentSession?.packageId || "",
+      isDemo: currentSession.isDemo,
+    };
+
+    this.userInfo = {
+      ...this.userInfo,
+      isDemo: currentSession.isDemo,
+      code: config.code, // <-- Set delivery code here
+    };
+    if (!assessment.assessmentId) {
+      console.error(`assessment.assessmentId is undefined`);
+      throw `unknown assessment code`;
+    }
+
+    if (currentSession.isDemo) {
+      const randomId = Math.random().toString(36).substring(2, 15);
+      return {
+        id: `demo-${randomId}`,
+        createdAt: Date.now(),
+        createdBy: this.userInfo.userId,
+        deliveryId: "1234567890",
+        updatedAt: Date.now(),
+        userId: this.userInfo.userId,
         appId: this.appId || "",
+        code: config.code, // <-- Return delivery code here
         teacherId: "",
-        userId: userInfo.localId || "",
-        identification: config.identification || "",
-        authenticationMethod: "anonymous",
-        isDemo: false,
-        refreshToken: userInfo.refreshToken,
-        code: "",
-        token: userInfo.idToken,
-      };
-      const sessionResponse = await this.axios.post<Session>(
-        `/delivery/session/start`,
-        {
-          code: config.code,
-        }
-      );
-      const currentSession = sessionResponse.data;
-      if (!currentSession) {
-        console.error(`studentAppSessionInfo is undefined`);
-        throw `unknown assessment code`;
-      }
-      const assessment = {
-        assessmentId: currentSession?.assessmentId || "",
-        name: currentSession?.assessmentName || "",
-        packageId: currentSession?.packageId || "",
-        isDemo: currentSession.isDemo,
-      };
-
-      this.userInfo = {
-        ...this.userInfo,
-        isDemo: currentSession.isDemo,
-        code: config.code, // <-- Set delivery code here
-      };
-      if (!assessment.assessmentId) {
-        console.error(`assessment.assessmentId is undefined`);
-        throw `unknown assessment code`;
-      }
-
-      if (currentSession.isDemo) {
-        const randomId = Math.random().toString(36).substring(2, 15);
-        return {
-          id: `demo-${randomId}`,
-          createdAt: Date.now(),
-          createdBy: this.userInfo.userId,
-          deliveryId: "1234567890",
-          updatedAt: Date.now(),
-          userId: this.userInfo.userId,
-          appId: this.appId || "",
-          code: config.code, // <-- Return delivery code here
-          teacherId: "",
-          isDemo: true,
-          assessmentId: assessment?.assessmentId || "",
-          assessmentName: assessment?.name || "",
-          packageId: assessment.packageId,
-          sessionState: "not_started",
-        } as Session;
-      } else {
-        const testSessionInfo = await this.axios.post<Session>(
-          `/session/start`,
-          {
-            metadata: config.metadata,
-            identification: config.identification || "",
-          }
-        );
-        if (testSessionInfo.data) {
-          const currentSession = testSessionInfo.data as Session;
-          this.userInfo = {
-            ...this.userInfo,
-            code: currentSession?.code || config.code, // <-- Set delivery code here if available, fallback to input
-            isDemo: currentSession?.isDemo || false,
-          };
-          // Ensure the returned object includes the delivery code
-          return {
-            ...currentSession,
-            code: currentSession.code || config.code, // <-- Return delivery code here
-          };
-        }
-        return currentSession;
-      }
+        isDemo: true,
+        assessmentId: assessment?.assessmentId || "",
+        assessmentName: assessment?.name || "",
+        packageId: assessment.packageId,
+        sessionState: "not_started",
+      } as Session;
     } else {
       throw `could login`;
     }
   };
 
   authenticateByCode = async (code: string) => {
-    const userInfo = await this.anonymousLogin();
-    if (userInfo) {
+    if (!this.userInfo) {
+      throw `userInfo is undefined,  please call authenticateAnonymously first`;
+    }
+    const sessionData = await this.axios.post<Session>(`/session/start`, {
+      code,
+    });
+    const session = sessionData.data;
+    if (session) {
+      // const asessments = await this.getAssessments();
+      const { createdBy, isDemo } = session;
       this.userInfo = {
-        appId: this.appId || "",
-        teacherId: "",
-        userId: userInfo.localId || "",
-        identification: "",
-        isDemo: false,
-        authenticationMethod: "code",
+        ...this.userInfo,
+        teacherId: createdBy,
+        isDemo,
         code: code,
-        refreshToken: userInfo.refreshToken,
-        token: userInfo.idToken,
       };
-      const sessionData = await this.axios.post<Session>(`/session/start`, {
-        code,
-      });
-      const session = sessionData.data;
-      if (session) {
-        // const asessments = await this.getAssessments();
-        const { createdBy, isDemo } = session;
-        this.userInfo = {
-          ...this.userInfo,
-          teacherId: createdBy,
-          isDemo,
-          code: code,
-        };
-        return session;
-      } else {
-        throw `could find session`;
-      }
+      return session;
     } else {
-      throw `could login`;
+      throw `could find session`;
     }
   };
 

@@ -152,7 +152,6 @@ export type AssessmentItemRefInfo<T extends ItemInfo> = T & {
 
 export interface AssessmentBasicInfo {
   packageId: string;
-  assessmentId: string;
   name: string;
 }
 
@@ -205,7 +204,6 @@ export interface Item extends QtiResource {
 
 export interface PackageInfo extends ObjectBase {
   id: string;
-  packageId: string;
   name: string;
   itemCount: number;
   applicationId: string;
