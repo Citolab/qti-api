@@ -45,4 +45,5 @@ export interface AuthStudentResult {
   idToken: string;
   localId: string;
   refreshToken: string;
+  expiresIn?: number;
 }
