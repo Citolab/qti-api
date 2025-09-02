@@ -3,6 +3,7 @@ import {
   UserInfo,
   ExtendedTestContext,
   SessionStateType,
+  UserInfoWithToken,
 } from "./model";
 import { IQtiDataApi } from "./qti-data-api-interface";
 
@@ -39,19 +40,19 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
     return this.qtiApi.getAssessment(assessmentId);
   }
 
-  private _userInfo: (UserInfo & { token: string }) | undefined;
+  private _userInfo: UserInfoWithToken | undefined;
 
-  get userInfo(): (UserInfo & { token: string }) | undefined {
+  get userInfo(): UserInfoWithToken | undefined {
     if (this._userInfo) return this._userInfo;
     if (localStorage) {
       const u = localStorage.getItem("userInfo");
       if (u) {
-        return JSON.parse(u) as UserInfo & { token: string };
+        return JSON.parse(u) as UserInfoWithToken;
       }
     }
     return undefined;
   }
-  set userInfo(value: (UserInfo & { token: string }) | undefined) {
+  set userInfo(value: UserInfoWithToken | undefined) {
     if (value) {
       this._userInfo = value;
       if (localStorage) {

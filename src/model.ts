@@ -42,10 +42,26 @@ export interface ExtendedTestContext extends Omit<TestContext, "items"> {
   state?: SessionStateType;
   items: ExtendedItemContext[];
 }
+
+export interface UserInfoWithToken extends UserInfo {
+  token: string;
+  refreshToken: string;
+  authenticationMethod?: AuthenticationMethod;
+}
+
+export interface AuthStatus {
+  isAuthenticated: boolean;
+  userId: string | null;
+  token: string | null;
+  expiresIn: number | null;
+  isSessionExpired: boolean;
+}
+
 export interface UserInfo {
   userId?: string;
   teacherId: string;
-  code: string;
+  code?: string;
+  deliveryCode?: string;
   appId: string;
   isDemo?: boolean;
   identification?: string; // name or student id

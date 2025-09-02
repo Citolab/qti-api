@@ -7,6 +7,7 @@ import {
   AuthenticationMethod,
   AxiosInstanceConfig,
   LogEntry,
+  UserInfoWithToken,
 } from "./model";
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import {
@@ -147,7 +148,7 @@ export class QtiApi implements IQtiDataApi {
               this._userInfo?.code
             ) {
               authenticationMethod = () =>
-                this.authenticateByCode(this._userInfo!.code);
+                this.authenticateByCode(this._userInfo!.code || "");
             }
             if (authenticationMethod) {
               return getRefreshTokenAndRetry(
@@ -192,22 +193,12 @@ export class QtiApi implements IQtiDataApi {
       })
     | undefined;
 
-  get userInfo():
-    | (UserInfo & {
-        token: string;
-        refreshToken: string;
-        authenticationMethod?: AuthenticationMethod;
-      })
-    | undefined {
+  get userInfo(): UserInfoWithToken | undefined {
     if (this._userInfo) return this._userInfo;
     if (localStorage) {
       const u = localStorage.getItem(this.userKey);
       if (u) {
-        return JSON.parse(u) as UserInfo & {
-          token: string;
-          refreshToken: string;
-          authenticationMethod?: AuthenticationMethod;
-        };
+        return JSON.parse(u) as UserInfoWithToken;
       }
     }
     return undefined;
@@ -222,18 +213,38 @@ export class QtiApi implements IQtiDataApi {
         })
       | undefined
   ) {
+    console.log("setting value:", value);
     if (value) {
       this._userInfo = value;
       this.createAxiosInstance();
+      console.log("localStorage = true:", !!localStorage ? "ja" : "nee");
       if (localStorage) {
+        console.log("userKey:", this.userKey);
         localStorage.setItem(this.userKey, JSON.stringify(value));
       }
     }
   }
 
   authenticateAnonymously = async (): Promise<AuthStudentResult> => {
+    // Check if we already have valid user info stored
+    debugger;
+    console.log(`userInfo: ${JSON.stringify(this.userInfo)}`);
+
+    if (this.userInfo && this.userInfo.token && this.userInfo.refreshToken) {
+      console.log(
+        "User already authenticated anonymously, reusing existing session:",
+        this.userInfo
+      );
+      return {
+        idToken: this.userInfo.token,
+        refreshToken: this.userInfo.refreshToken,
+        localId: this.userInfo.userId,
+      } as AuthStudentResult;
+    }
+
     const userInfo = await this.anonymousLogin();
     if (userInfo) {
+      console.log("setting userInfo");
       this.userInfo = {
         appId: this.appId || "",
         teacherId: "",
@@ -242,9 +253,9 @@ export class QtiApi implements IQtiDataApi {
         isDemo: false,
         authenticationMethod: "anonymous",
         refreshToken: userInfo.refreshToken,
-        code: userInfo.localId || "",
         token: userInfo.idToken,
       };
+      console.log("User authenticated anonymously:", this.userInfo);
       return userInfo;
     } else {
       throw `could not login`;
@@ -258,6 +269,9 @@ export class QtiApi implements IQtiDataApi {
     loginAnonymouslyBeforeCheck?: boolean;
   }): Promise<Session> => {
     if (!this.userInfo) {
+      console.warn(
+        "User info is undefined, please call authenticateAnonymously first"
+      );
       throw `userInfo is undefined,  please call authenticateAnonymously first`;
     }
     const sessionResponse = await this.axios.post<Session>(
@@ -267,6 +281,7 @@ export class QtiApi implements IQtiDataApi {
       }
     );
     const currentSession = sessionResponse.data;
+    console.log("Current session:", currentSession);
     if (!currentSession) {
       console.error(`studentAppSessionInfo is undefined`);
       throw `unknown assessment code`;
@@ -277,12 +292,13 @@ export class QtiApi implements IQtiDataApi {
       packageId: currentSession?.packageId || "",
       isDemo: currentSession.isDemo,
     };
-
-    this.userInfo = {
+    const updatedUserInfo = {
       ...this.userInfo,
       isDemo: currentSession.isDemo,
-      code: config.code, // <-- Set delivery code here
+      code: currentSession.code,
+      deliveryCode: currentSession.deliveryId,
     };
+    this.userInfo = updatedUserInfo;
     if (!assessment.assessmentId) {
       console.error(`assessment.assessmentId is undefined`);
       throw `unknown assessment code`;
@@ -306,9 +322,8 @@ export class QtiApi implements IQtiDataApi {
         packageId: assessment.packageId,
         sessionState: "not_started",
       } as Session;
-    } else {
-      throw `could login`;
     }
+    return currentSession;
   };
 
   authenticateByCode = async (code: string) => {
@@ -322,12 +337,13 @@ export class QtiApi implements IQtiDataApi {
     if (session) {
       // const asessments = await this.getAssessments();
       const { createdBy, isDemo } = session;
-      this.userInfo = {
+      const updatedUserInfo = {
         ...this.userInfo,
-        teacherId: createdBy,
-        isDemo,
-        code: code,
+        isDemo: session.isDemo,
+        code: session.code,
+        deliveryCode: session.deliveryId,
       };
+      this.userInfo = updatedUserInfo;
       return session;
     } else {
       throw `could find session`;

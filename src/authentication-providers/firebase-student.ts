@@ -1,14 +1,40 @@
+import { AuthStatus } from "../model";
 import {
   AuthStudentResult,
   IAuthStudentProvider,
+  IQtiDataApi,
 } from "../qti-data-api-interface";
 import axios from "axios";
 
 export class FirebaseAuthStudentProvider implements IAuthStudentProvider {
   constructor(private firebaseAuthApiKey: string) {}
 
+  private sessionExpired = false;
+  private qtiApi: IQtiDataApi | null = null; // Reference to QTI API for storage
+
   getProviderId(): string {
     return "firebase";
+  }
+
+  markSessionExpired(): void {
+    this.sessionExpired = true;
+  }
+
+  logout(): void {
+    this.qtiApi = null;
+    localStorage.clear();
+  }
+
+  public getAuthStatus() {
+    const userInfo = this.qtiApi?.userInfo;
+
+    return {
+      isAuthenticated: !!userInfo?.token,
+      userId: userInfo?.userId || null,
+      token: userInfo?.token || null,
+      expiresIn: 3600, // You might want to calculate this from stored data
+      isSessionExpired: this.sessionExpired,
+    } as AuthStatus;
   }
 
   async authenticate(): Promise<AuthStudentResult> {

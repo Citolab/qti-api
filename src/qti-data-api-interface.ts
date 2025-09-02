@@ -1,14 +1,15 @@
 import {
   Assessment,
+  AuthStatus,
   ExtendedTestContext,
   LogEntry,
   Session,
-  SessionStateType,
+  UserInfoWithToken,
 } from "./model";
 
 export interface IQtiDataApi {
   apiUrl: string;
-
+  userInfo?: UserInfoWithToken;
   authenticateByCode: (code: string) => Promise<Session>;
   authenticateByDeliveryCode: (config: {
     code: string;
@@ -39,6 +40,9 @@ export interface IAuthStudentProvider {
   authenticate(): Promise<AuthStudentResult>;
   refreshToken(refreshToken: string): Promise<AuthStudentResult>;
   getProviderId(): string;
+  getAuthStatus(): AuthStatus;
+  markSessionExpired(): void;
+  logout(): void;
 }
 
 export interface AuthStudentResult {
