@@ -15,6 +15,24 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
   constructor(public qtiApi: IQtiDataApi) {
     this.apiUrl = qtiApi.apiUrl;
   }
+  async getCurrentUser(): Promise<UserInfo | null> {
+    // Try to get user info from local storage first
+    const stored = localStorage.getItem("userInfo");
+    if (stored) {
+      try {
+        const user = JSON.parse(stored) as UserInfoWithToken;
+        return user;
+      } catch {
+        // If parsing fails, fallback to API
+      }
+    }
+    // Fallback to the underlying API
+    if (this.qtiApi.getCurrentUser) {
+      return this.qtiApi.getCurrentUser();
+    }
+    return null;
+  }
+
   authenticateByDeliveryCode = (config: {
     code: string;
     identification?: string;

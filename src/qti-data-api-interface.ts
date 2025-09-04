@@ -4,6 +4,7 @@ import {
   ExtendedTestContext,
   LogEntry,
   Session,
+  UserInfo,
   UserInfoWithToken,
 } from "./model";
 
@@ -28,6 +29,7 @@ export interface IQtiDataApi {
   getAssessments: () => Promise<Assessment[]>;
   setTestContext: (code: string, context: ExtendedTestContext) => Promise<void>;
   getTestContext: (code: string) => Promise<ExtendedTestContext | null>;
+  getCurrentUser: () => Promise<UserInfo | null>;
   getStudentSessionInfo: (code: string) => Promise<Session>;
   updateStudentSessionInfo: (
     id: string,

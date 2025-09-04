@@ -79,6 +79,9 @@ export interface ItemResponse {
 }
 
 export interface StudentResult<T extends ItemContext> {
+  sessionId: string;
+  deliveryId: string;
+  assessmentId: string;
   code: string;
   score: number;
   items: T[];

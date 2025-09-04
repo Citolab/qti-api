@@ -417,6 +417,17 @@ export class QtiApi implements IQtiDataApi {
     return sessionInfo.data;
   };
 
+  getCurrentUser = async (): Promise<UserInfo | null> => {
+    try {
+      const response = await this.axios.get<UserInfo>("/currentUser");
+      return response.data;
+    } catch (error) {
+      // If the request fails (e.g., invalid token, unauthorized), return null
+      // This allows the calling code to handle navigation to login page
+      return null;
+    }
+  };
+
   logAction = async (
     assessmentId: string,
     action: string,

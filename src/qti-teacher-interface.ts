@@ -85,6 +85,9 @@ export interface IQtiTeacherApi {
   getStudentResults: <T extends ItemContext, T2 extends StudentResult<T>[]>(
     assessmentId: string
   ) => Promise<T2>;
+  getStudentResultsByDelivery: <T extends ItemContext, T2 extends StudentResult<T>[]>(
+    deliveryId: string
+  ) => Promise<T2>;
   getSessions: () => Promise<Session[]>;
 }
 

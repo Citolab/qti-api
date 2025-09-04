@@ -539,7 +539,17 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     T extends ItemContext,
     T2 extends StudentResult<T>[]
   >(assessmentId: string) {
-    const result = await this.axios.get<T2>(`/assessment/${assessmentId}`);
+    const result = await this.axios.get<T2>(
+      `/assessment/${assessmentId}/results`
+    );
+    return result.data as T2;
+  }
+
+  public async getStudentResultsByDelivery<
+    T extends ItemContext,
+    T2 extends StudentResult<T>[]
+  >(deliveryId: string) {
+    const result = await this.axios.get<T2>(`/delivery/${deliveryId}/results`);
     return result.data as T2;
   }
 }
