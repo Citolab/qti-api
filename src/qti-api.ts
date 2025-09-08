@@ -227,7 +227,6 @@ export class QtiApi implements IQtiDataApi {
 
   authenticateAnonymously = async (): Promise<AuthStudentResult> => {
     // Check if we already have valid user info stored
-    debugger;
     console.log(`userInfo: ${JSON.stringify(this.userInfo)}`);
 
     if (this.userInfo && this.userInfo.token && this.userInfo.refreshToken) {
