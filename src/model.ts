@@ -14,7 +14,24 @@ export type SessionStateType =
   | "finished"
   | "scored";
 
-export type DeliveryStateType = "not_started" | "active" | "inactive";
+export const DeliveryState = {
+  NOT_STARTED: "not_started",
+  ACTIVE: "active",
+  INACTIVE: "inactive",
+} as const;
+
+// Derive the type from the values
+export type DeliveryStateType =
+  (typeof DeliveryState)[keyof typeof DeliveryState];
+
+// Optional: Alias for the enum-like object (if needed)
+export type DeliveryStateEnum = typeof DeliveryState;
+
+export enum DeliveryStateEnum2 {
+  NOT_STARTED,
+  ACTIVE,
+  INACTIVE,
+}
 
 export type AuthenticationMethod =
   | "anonymous"
@@ -294,7 +311,7 @@ export interface Delivery extends ObjectBase {
   startedAt?: integer;
   finishedAt?: integer;
   endTime?: integer;
-  state: DeliveryStateType;
+  state: DeliveryStateEnum2;
   canStop?: boolean;
   canRestart?: boolean;
   assessmentId: string;

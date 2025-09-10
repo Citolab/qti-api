@@ -455,7 +455,7 @@ export class QtiTeacherApi implements IQtiTeacherApi {
    */
   public async startDelivery(assessmentId: string): Promise<Delivery> {
     const result = await this.axios.post<Delivery>("/delivery/start", {
-      assessmentId,
+      code: assessmentId,
     });
     return result.data;
   }
