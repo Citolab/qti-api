@@ -81,6 +81,7 @@ export interface ItemResponse {
 export interface StudentResult<T extends ItemContext> {
   sessionId: string;
   deliveryId: string;
+  identification?: string;
   assessmentId: string;
   code: string;
   score: number;

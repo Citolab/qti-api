@@ -213,13 +213,10 @@ export class QtiApi implements IQtiDataApi {
         })
       | undefined
   ) {
-    console.log("setting value:", value);
     if (value) {
       this._userInfo = value;
       this.createAxiosInstance();
-      console.log("localStorage = true:", !!localStorage ? "ja" : "nee");
       if (localStorage) {
-        console.log("userKey:", this.userKey);
         localStorage.setItem(this.userKey, JSON.stringify(value));
       }
     }
@@ -227,13 +224,8 @@ export class QtiApi implements IQtiDataApi {
 
   authenticateAnonymously = async (): Promise<AuthStudentResult> => {
     // Check if we already have valid user info stored
-    console.log(`userInfo: ${JSON.stringify(this.userInfo)}`);
 
     if (this.userInfo && this.userInfo.token && this.userInfo.refreshToken) {
-      console.log(
-        "User already authenticated anonymously, reusing existing session:",
-        this.userInfo
-      );
       return {
         idToken: this.userInfo.token,
         refreshToken: this.userInfo.refreshToken,
@@ -243,7 +235,6 @@ export class QtiApi implements IQtiDataApi {
 
     const userInfo = await this.anonymousLogin();
     if (userInfo) {
-      console.log("setting userInfo");
       this.userInfo = {
         appId: this.appId || "",
         teacherId: "",
@@ -254,7 +245,6 @@ export class QtiApi implements IQtiDataApi {
         refreshToken: userInfo.refreshToken,
         token: userInfo.idToken,
       };
-      console.log("User authenticated anonymously:", this.userInfo);
       return userInfo;
     } else {
       throw `could not login`;
@@ -280,7 +270,6 @@ export class QtiApi implements IQtiDataApi {
       }
     );
     const currentSession = sessionResponse.data;
-    console.log("Current session:", currentSession);
     if (!currentSession) {
       console.error(`studentAppSessionInfo is undefined`);
       throw `unknown assessment code`;
