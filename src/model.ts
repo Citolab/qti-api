@@ -6,15 +6,26 @@ import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
 import { TestContext } from "@citolab/qti-components/qti-test/core";
 import { AxiosInstance } from "axios";
 
-export type SessionStateType =
-  | "not_generated"
-  | "not_available"
-  | "not_started"
-  | "started"
-  | "finished"
-  | "scored";
 
-export type DeliveryStateType = "not_started" | "active" | "inactive";
+
+export enum SessionStateEnum {
+  NOT_GENERATED = "not_generated",
+  NOT_AVAILABLE = "not_available",
+  NOT_STARTED = "not_started",
+  STARTED = "started",
+  FINISHED = "finished",
+  SCORED = "scored",
+}
+
+export type SessionStateType = `${SessionStateEnum}`;
+
+export enum DeliveryStateEnum {
+  NOT_STARTED = "not_started",
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+}
+
+export type DeliveryStateType = `${DeliveryStateEnum}`;
 
 export type AuthenticationMethod =
   | "anonymous"
@@ -295,7 +306,7 @@ export interface Delivery extends ObjectBase {
   startedAt?: integer;
   finishedAt?: integer;
   endTime?: integer;
-  state: DeliveryStateType;
+  state: DeliveryStateEnum;
   canStop?: boolean;
   canRestart?: boolean;
   assessmentId: string;
