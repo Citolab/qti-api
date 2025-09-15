@@ -3,7 +3,7 @@ import {
   ResponseInteraction,
 } from "@citolab/qti-components/exports/expression-result.js";
 import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
-import { TestContext } from "@citolab/qti-components/qti-test/core";
+import { TestContext } from "@citolab/qti-components/qti-test";
 import { AxiosInstance } from "axios";
 
 
