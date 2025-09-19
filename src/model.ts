@@ -6,14 +6,12 @@ import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
 import { TestContext } from "@citolab/qti-components/qti-test";
 import { AxiosInstance } from "axios";
 
-
-
 export enum SessionStateEnum {
   NOT_GENERATED = "not_generated",
   NOT_AVAILABLE = "not_available",
   NOT_STARTED = "not_started",
   STARTED = "started",
-  FINISHED = "finished",
+  COMPLETED = "completed",
   SCORED = "scored",
 }
 
@@ -304,7 +302,7 @@ export interface DeleteResult {
 
 export interface Delivery extends ObjectBase {
   startedAt?: integer;
-  finishedAt?: integer;
+  completedAt?: integer;
   endTime?: integer;
   state: DeliveryStateEnum;
   canStop?: boolean;
