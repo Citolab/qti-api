@@ -510,6 +510,15 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     return result.data;
   }
 
+  public async scoreDelivery(
+    deliveryId: string
+  ): Promise<{ scoredSessions: number }> {
+    const result = await this.axios.post<{ scoredSessions: number }>(
+      `/delivery/${deliveryId}/score`
+    );
+    return result.data;
+  }
+
   /**
    * Updates the score of a specific response in an item's statistics.
    *

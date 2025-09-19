@@ -15,6 +15,7 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
   constructor(public qtiApi: IQtiDataApi) {
     this.apiUrl = qtiApi.apiUrl;
   }
+
   async getCurrentUser(): Promise<UserInfo | null> {
     // Try to get user info from local storage first
     const stored = localStorage.getItem("userInfo");
@@ -39,6 +40,10 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
     metadata?: unknown;
   }): Promise<Session> => {
     return this.qtiApi.authenticateByDeliveryCode(config);
+  };
+
+  scoreItems = async (code: string): Promise<ExtendedTestContext> => {
+    return this.qtiApi.scoreItems(code);
   };
 
   updateStudentSessionInfo = async (id: string, data: Partial<Session>) => {

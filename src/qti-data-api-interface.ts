@@ -31,6 +31,7 @@ export interface IQtiDataApi {
   getTestContext: (code: string) => Promise<ExtendedTestContext | null>;
   getCurrentUser: () => Promise<UserInfo | null>;
   getStudentSessionInfo: (code: string) => Promise<Session>;
+  scoreItems: (code: string) => Promise<ExtendedTestContext>;
   updateStudentSessionInfo: (
     id: string,
     data: Partial<Session>

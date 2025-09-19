@@ -416,6 +416,13 @@ export class QtiApi implements IQtiDataApi {
     }
   };
 
+  scoreItems = async (code: string): Promise<ExtendedTestContext> => {
+    const response = await this.axios.post<ExtendedTestContext>(
+      `/session/${code}/score`
+    );
+    return response.data;
+  };
+
   logAction = async (
     assessmentId: string,
     action: string,

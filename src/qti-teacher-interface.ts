@@ -74,6 +74,9 @@ export interface IQtiTeacherApi {
     assessmentId: string,
     target: "teacher" | "reviewer"
   ): Promise<T[]>;
+
+  scoreDelivery: (deliveryId: string) => Promise<{ scoredSessions: number }>;
+
   updateItemStatResponseScore: (
     itemIdentifier: string,
     assessmentId: string,
@@ -85,7 +88,10 @@ export interface IQtiTeacherApi {
   getStudentResults: <T extends ItemContext, T2 extends StudentResult<T>[]>(
     assessmentId: string
   ) => Promise<T2>;
-  getStudentResultsByDelivery: <T extends ItemContext, T2 extends StudentResult<T>[]>(
+  getStudentResultsByDelivery: <
+    T extends ItemContext,
+    T2 extends StudentResult<T>[]
+  >(
     deliveryId: string
   ) => Promise<T2>;
   getSessions: () => Promise<Session[]>;
