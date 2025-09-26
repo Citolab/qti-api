@@ -19,7 +19,6 @@ export class QtiToolsApi implements IQtiToolsApi {
   private _token = "";
   private _refreshToken = "";
   public apiUrl: string;
-  private appId: string;
   private authProvider: ITeacherAuthProvider;
   private axiosError?: (error: AxiosError) => void;
   private admin = false;
@@ -29,7 +28,6 @@ export class QtiToolsApi implements IQtiToolsApi {
   constructor(
     public options: {
       apiUrl: string;
-      appId: string;
       authProvider: ITeacherAuthProvider;
       axiosError?: (error: AxiosError) => void;
       admin?: boolean;
@@ -40,7 +38,6 @@ export class QtiToolsApi implements IQtiToolsApi {
   ) {
     const {
       apiUrl,
-      appId,
       authProvider,
       axiosError,
       admin,
@@ -48,7 +45,6 @@ export class QtiToolsApi implements IQtiToolsApi {
       axiosConfig,
     } = options;
     this.apiUrl = apiUrl;
-    this.appId = appId;
     this.authProvider = authProvider;
     this.externalAxiosConfig = axiosConfig;
 
@@ -161,9 +157,6 @@ export class QtiToolsApi implements IQtiToolsApi {
       if (this.token) {
         config.headers["Authorization"] = `Bearer ${this.token}`;
       }
-      if (this.appId) {
-        config.headers["x-app"] = this.appId;
-      }
       if (this.admin) {
         config.headers["x-admin"] = "true";
       }
@@ -251,7 +244,6 @@ export class QtiToolsApi implements IQtiToolsApi {
       const authResult = await this.authProvider.authenticate(email, password);
 
       let headers = {
-        "x-app": this.appId,
         Authorization: "Bearer " + authResult.idToken,
       };
 

@@ -25,7 +25,6 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   private _token = "";
   private _refreshToken = "";
   public apiUrl: string;
-  private appId: string;
   private authProvider: ITeacherAuthProvider;
   private axiosError?: (error: AxiosError) => void;
   private admin = false;
@@ -35,7 +34,6 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   constructor(
     public options: {
       apiIUrl: string;
-      appId: string;
       authProvider: ITeacherAuthProvider;
       axiosError?: (error: AxiosError) => void;
       admin?: boolean;
@@ -46,7 +44,6 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   ) {
     const {
       apiIUrl,
-      appId,
       authProvider,
       axiosError,
       admin,
@@ -55,7 +52,6 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     } = options;
 
     this.apiUrl = apiIUrl;
-    this.appId = appId;
     this.authProvider = authProvider;
     this.externalAxiosConfig = axiosConfig;
 
@@ -169,9 +165,6 @@ export class QtiTeacherApi implements IQtiTeacherApi {
       // Add QTI-specific headers (these are additive and won't conflict with auth)
       if (this.token) {
         config.headers.Authorization = `Bearer ${this.token}`;
-      }
-      if (this.appId) {
-        config.headers["x-app"] = this.appId;
       }
       if (this.admin) {
         config.headers["x-admin"] = "true";
@@ -299,7 +292,6 @@ export class QtiTeacherApi implements IQtiTeacherApi {
       const authResult = await this.authProvider.authenticate(email, password);
 
       let headers = {
-        "x-app": this.appId,
         Authorization: "Bearer " + authResult.idToken,
       };
 

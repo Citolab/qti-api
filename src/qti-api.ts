@@ -23,7 +23,6 @@ export class QtiApi implements IQtiDataApi {
 
   constructor(
     public apiUrl: string,
-    private appId: string,
     private authProvider: IAuthStudentProvider,
     private shouldGetXmlResourceFromDatabase = false,
     private axiosError?: (error: AxiosError) => void,
@@ -35,7 +34,7 @@ export class QtiApi implements IQtiDataApi {
     // get domain from apiUrl
     const apiDomain =
       apiUrl.split("/").length > 2 ? apiUrl.split("/")[2] : apiUrl;
-    this.userKey = `userInfos-${appId}-${apiDomain}-${authProvider.getProviderId()}`;
+    this.userKey = `userInfos-${apiDomain}-${authProvider.getProviderId()}`;
     const storedUserInfo = localStorage.getItem(this.userKey);
     // remove / on end if api Url has it
     if (apiUrl.endsWith("/")) {
@@ -82,9 +81,6 @@ export class QtiApi implements IQtiDataApi {
     this.axios.interceptors.request.use((config) => {
       if (this.userInfo?.token) {
         config.headers!["Authorization"] = `Bearer ${this.userInfo.token}`;
-      }
-      if (this.appId) {
-        config.headers!["x-app"] = this.appId;
       }
       if (this.userInfo?.code) {
         config.headers!["x-code"] = this.userInfo.code;
@@ -236,7 +232,6 @@ export class QtiApi implements IQtiDataApi {
     const userInfo = await this.anonymousLogin();
     if (userInfo) {
       this.userInfo = {
-        appId: this.appId || "",
         teacherId: "",
         userId: userInfo.localId || "",
         identification: "",
@@ -301,7 +296,6 @@ export class QtiApi implements IQtiDataApi {
         deliveryId: "1234567890",
         updatedAt: Date.now(),
         userId: this.userInfo.userId,
-        appId: this.appId || "",
         code: config.code, // <-- Return delivery code here
         teacherId: "",
         isDemo: true,
@@ -370,7 +364,7 @@ export class QtiApi implements IQtiDataApi {
     //get all localStorage keys
     const keys = Object.keys(localStorage);
     for (const key of keys) {
-      if (key.startsWith(`userInfo_${this.appId}`) || key === this.userKey) {
+      if (key === this.userKey) {
         localStorage.removeItem(key);
       }
     }

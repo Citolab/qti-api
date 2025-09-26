@@ -71,7 +71,6 @@ export interface UserInfo {
   teacherId: string;
   code?: string;
   deliveryCode?: string;
-  appId: string;
   isDemo?: boolean;
   identification?: string; // name or student id
   password?: string;
@@ -235,7 +234,6 @@ export interface PackageInfo extends ObjectBase {
   id: string;
   name: string;
   itemCount: number;
-  applicationId: string;
   qtiVersion: number;
   errorMessage: string;
   bucketname: string;
