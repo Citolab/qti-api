@@ -202,6 +202,7 @@ export interface AssessmentSettings {
   responsive: boolean;
   backendScoring: boolean;
   studentIdentification: boolean;
+  dimensions?: { width: number; height: number } | null;
 }
 
 export interface AsssessmentResource extends PackageResource {
