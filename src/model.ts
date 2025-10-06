@@ -171,6 +171,7 @@ export interface ItemInfo {
   sequenceNumber?: number;
   maxScore?: number;
   weight?: number;
+  manualScoringRequired?: boolean;
 }
 
 // Define a type instead of an interface for this case
