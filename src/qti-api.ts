@@ -46,8 +46,9 @@ export class QtiApi implements IQtiDataApi {
       this.createAxiosInstance();
     }
   }
-  updateStudentSessionInfo = async (id: string, data: Partial<Session>) => {
-    await this.axios.put(`/plannedSession/${id}/update`, data);
+  updateStudentSessionInfo = async (code: string, data: Partial<Session>) => {
+    // Update the student session information, make sure only allow specific fields to be updated
+    await this.axios.put(`/session/${code}/update`, data);
   };
 
   private createAxiosInstance() {
