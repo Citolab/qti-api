@@ -92,6 +92,7 @@ export interface StudentResult<T extends ItemContext> {
   identification?: string;
   assessmentId: string;
   code: string;
+  state?: SessionStateType;
   score: number;
   items: T[];
 }
