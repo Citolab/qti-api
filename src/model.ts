@@ -11,7 +11,7 @@ export enum SessionStateEnum {
   NOT_AVAILABLE = "not_available",
   NOT_STARTED = "not_started",
   STARTED = "started",
-  COMPLETED = "completed",
+  FINISHED = "finished",
   SCORED = "scored",
 }
 
