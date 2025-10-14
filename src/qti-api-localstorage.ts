@@ -4,6 +4,8 @@ import {
   ExtendedTestContext,
   SessionStateType,
   UserInfoWithToken,
+  TestsetSession,
+  TestsetResult,
 } from "./model";
 import { IQtiDataApi } from "./qti-data-api-interface";
 
@@ -131,5 +133,22 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
     payload?: unknown
   ) => {
     console.log("logAction", assessmentId, action, payload);
+  };
+
+  // Testset-related methods - delegate to underlying API
+  authenticateByTestsetCode = async (config: {
+    code: string;
+    identification?: string;
+    metadata?: unknown;
+  }) => {
+    return this.qtiApi.authenticateByTestsetCode(config);
+  };
+
+  getTestsetSession = async (code: string) => {
+    return this.qtiApi.getTestsetSession(code);
+  };
+
+  getTestsetResult = async (testsetSessionId: string) => {
+    return this.qtiApi.getTestsetResult(testsetSessionId);
   };
 }

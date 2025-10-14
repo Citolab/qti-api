@@ -4,6 +4,8 @@ import {
   ExtendedTestContext,
   LogEntry,
   Session,
+  TestsetSession,
+  TestsetResult,
   UserInfo,
   UserInfoWithToken,
 } from "./model";
@@ -17,6 +19,11 @@ export interface IQtiDataApi {
     identification?: string;
     metadata?: unknown;
   }) => Promise<Session>;
+  authenticateByTestsetCode: (config: {
+    code: string;
+    identification?: string;
+    metadata?: unknown;
+  }) => Promise<TestsetSession>;
   authenticateAnonymously: () => Promise<AuthStudentResult>;
   log: (type: string, entry: LogEntry) => Promise<void>;
   logout: () => void;
@@ -36,6 +43,9 @@ export interface IQtiDataApi {
     id: string,
     data: Partial<Session>
   ) => Promise<void>;
+  // Testset-related methods
+  getTestsetSession: (code: string) => Promise<TestsetSession>;
+  getTestsetResult: (testsetSessionId: string) => Promise<TestsetResult>;
 }
 
 // Define authentication provider interface

@@ -10,6 +10,9 @@ import {
   PackageInfo,
   Session,
   LogEntry,
+  Testset,
+  TestsetSession,
+  TestsetResult,
 } from "./model";
 import { IQtiTeacherApi, ITeacherAuthProvider } from "./qti-teacher-interface";
 import {
@@ -552,5 +555,97 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   >(deliveryId: string) {
     const result = await this.axios.get<T2>(`/delivery/${deliveryId}/results`);
     return result.data as T2;
+  }
+
+  // Testset management methods
+  public async createTestset(
+    testset: Omit<Testset, "id" | "createdAt" | "updatedAt" | "createdBy">
+  ) {
+    const result = await this.axios.post<Testset>("/testsets", testset);
+    return result.data;
+  }
+
+  public async updateTestset(testsetId: string, updates: Partial<Testset>) {
+    const result = await this.axios.put<Testset>(
+      `/testsets/${testsetId}`,
+      updates
+    );
+    return result.data;
+  }
+
+  public async deleteTestset(testsetId: string) {
+    await this.axios.delete(`/testsets/${testsetId}`);
+  }
+
+  public async getTestsets() {
+    const result = await this.axios.get<Testset[]>("/testsets");
+    return result.data;
+  }
+
+  public async getTestset(testsetId: string) {
+    const result = await this.axios.get<Testset>(`/testsets/${testsetId}`);
+    return result.data;
+  }
+
+  // Testset session management methods
+  public async createTestsetSession(config: {
+    testsetId: string;
+    studentId: string;
+    identification?: string;
+    metadata?: unknown;
+  }) {
+    const result = await this.axios.post<TestsetSession>(
+      "/testset-sessions",
+      config
+    );
+    return result.data;
+  }
+
+  public async getTestsetSessions(testsetId?: string) {
+    const url = testsetId
+      ? `/testset-sessions?testsetId=${testsetId}`
+      : "/testset-sessions";
+    const result = await this.axios.get<TestsetSession[]>(url);
+    return result.data;
+  }
+
+  public async getTestsetSession(testsetSessionId: string) {
+    const result = await this.axios.get<TestsetSession>(
+      `/testset-sessions/${testsetSessionId}`
+    );
+    return result.data;
+  }
+
+  public async deleteTestsetSession(testsetSessionId: string) {
+    await this.axios.delete(`/testset-sessions/${testsetSessionId}`);
+  }
+
+  public async resetTestsetSession(testsetSessionId: string) {
+    await this.axios.post(`/testset-sessions/${testsetSessionId}/reset`);
+  }
+
+  // Testset results and statistics methods
+  public async getTestsetResults(testsetId: string) {
+    const result = await this.axios.get<TestsetResult[]>(
+      `/testsets/${testsetId}/results`
+    );
+    return result.data;
+  }
+
+  public async getTestsetResult(testsetSessionId: string) {
+    const result = await this.axios.get<TestsetResult>(
+      `/testset-sessions/${testsetSessionId}/result`
+    );
+    return result.data;
+  }
+
+  public async downloadTestsetResults(testsetId: string) {
+    const result = await this.axios.get(
+      `/testsets/${testsetId}/results/download`,
+      {
+        responseType: "blob",
+      }
+    );
+    return result.data as Blob;
   }
 }

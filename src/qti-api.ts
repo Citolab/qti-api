@@ -3,11 +3,12 @@ import {
   UserInfo,
   ExtendedTestContext,
   Assessment,
-  SessionStateType,
   AuthenticationMethod,
   AxiosInstanceConfig,
   LogEntry,
   UserInfoWithToken,
+  TestsetSession,
+  TestsetResult,
 } from "./model";
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import {
@@ -146,6 +147,16 @@ export class QtiApi implements IQtiDataApi {
             ) {
               authenticationMethod = () =>
                 this.authenticateByCode(this._userInfo!.code || "");
+            } else if (
+              this._userInfo &&
+              this.userInfo?.authenticationMethod === "testset_code" &&
+              this._userInfo?.testsetSessionCode
+            ) {
+              authenticationMethod = () =>
+                this.authenticateByTestsetCode({
+                  code: this._userInfo!.testsetSessionCode || "",
+                  identification: this._userInfo!.identification,
+                });
             }
             if (authenticationMethod) {
               return getRefreshTokenAndRetry(
@@ -430,6 +441,59 @@ export class QtiApi implements IQtiDataApi {
       time: date,
       createdBy: this.userInfo?.userId || "",
     });
+  };
+
+  authenticateByTestsetCode = async (config: {
+    code: string;
+    identification?: string;
+    metadata?: unknown;
+  }): Promise<TestsetSession> => {
+    if (!this.userInfo) {
+      console.warn(
+        "User info is undefined, please call authenticateAnonymously first"
+      );
+      throw `userInfo is undefined, please call authenticateAnonymously first`;
+    }
+
+    const testsetSessionResponse = await this.axios.post<TestsetSession>(
+      `/testset/session/start`,
+      {
+        code: config.code,
+        identification: config.identification,
+        metadata: config.metadata,
+      }
+    );
+
+    const testsetSession = testsetSessionResponse.data;
+    if (!testsetSession) {
+      console.error(`testsetSession is undefined`);
+      throw `unknown testset code`;
+    }
+
+    const updatedUserInfo = {
+      ...this.userInfo,
+      testsetSessionCode: testsetSession.code,
+      isDemo: testsetSession.testset?.isDemo || false,
+    };
+    this.userInfo = updatedUserInfo;
+
+    return testsetSession;
+  };
+
+  getTestsetSession = async (code: string): Promise<TestsetSession> => {
+    const response = await this.axios.get<TestsetSession>(
+      `/testset/session/${code}`
+    );
+    return response.data;
+  };
+
+  getTestsetResult = async (
+    testsetSessionId: string
+  ): Promise<TestsetResult> => {
+    const response = await this.axios.get<TestsetResult>(
+      `/testset/session/${testsetSessionId}/result`
+    );
+    return response.data;
   };
 
   private anonymousLogin = async () => {

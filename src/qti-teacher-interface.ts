@@ -8,6 +8,9 @@ import {
   Delivery,
   PackageInfo,
   Session,
+  Testset,
+  TestsetSession,
+  TestsetResult,
 } from "./model";
 import { AxiosInstance } from "axios";
 
@@ -95,6 +98,35 @@ export interface IQtiTeacherApi {
     deliveryId: string
   ) => Promise<T2>;
   getSessions: () => Promise<Session[]>;
+
+  // Testset management
+  createTestset: (
+    testset: Omit<Testset, "id" | "createdAt" | "updatedAt" | "createdBy">
+  ) => Promise<Testset>;
+  updateTestset: (
+    testsetId: string,
+    updates: Partial<Testset>
+  ) => Promise<Testset>;
+  deleteTestset: (testsetId: string) => Promise<void>;
+  getTestsets: () => Promise<Testset[]>;
+  getTestset: (testsetId: string) => Promise<Testset>;
+
+  // Testset session management
+  createTestsetSession: (config: {
+    testsetId: string;
+    studentId: string;
+    identification?: string;
+    metadata?: unknown;
+  }) => Promise<TestsetSession>;
+  getTestsetSessions: (testsetId?: string) => Promise<TestsetSession[]>;
+  getTestsetSession: (testsetSessionId: string) => Promise<TestsetSession>;
+  deleteTestsetSession: (testsetSessionId: string) => Promise<void>;
+  resetTestsetSession: (testsetSessionId: string) => Promise<void>;
+
+  // Testset results and statistics
+  getTestsetResults: (testsetId: string) => Promise<TestsetResult[]>;
+  getTestsetResult: (testsetSessionId: string) => Promise<TestsetResult>;
+  downloadTestsetResults: (testsetId: string) => Promise<Blob>;
 }
 
 export interface ITeacherAuthProvider {

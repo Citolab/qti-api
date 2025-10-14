@@ -29,7 +29,8 @@ export type AuthenticationMethod =
   | "anonymous"
   | "code"
   | "assessment"
-  | "group_code";
+  | "group_code"
+  | "testset_code";
 
 export interface ObjectBase {
   id: string;
@@ -71,6 +72,7 @@ export interface UserInfo {
   teacherId: string;
   code?: string;
   deliveryCode?: string;
+  testsetSessionCode?: string; // Code for testset session
   isDemo?: boolean;
   identification?: string; // name or student id
   password?: string;
@@ -136,6 +138,8 @@ export interface Session extends BaseSession {
   startFrom?: number;
   endAt?: number;
   testScore?: number;
+  testsetSessionId?: string; // Reference to parent testset session if part of a testset
+  sequenceInTestset?: number; // Order within the testset (0-based)
 }
 
 // QTI PACKAGE MODEL
@@ -309,4 +313,53 @@ export interface Delivery extends ObjectBase {
   canStop?: boolean;
   canRestart?: boolean;
   assessmentId: string;
+}
+
+export enum TestsetStateEnum {
+  NOT_STARTED = "not_started",
+  IN_PROGRESS = "in_progress",
+  COMPLETED = "completed",
+  PAUSED = "paused",
+}
+
+export type TestsetStateType = `${TestsetStateEnum}`;
+
+export interface Testset extends ObjectBase {
+  name: string;
+  description?: string;
+  teacherId: string;
+  assessmentIds: string[];
+  assessments?: Assessment[]; // Optional populated assessments
+  isActive: boolean;
+  isDemo?: boolean;
+}
+
+export interface TestsetSession extends ObjectBase {
+  code: string;
+  testsetId: string;
+  testset?: Testset; // Optional populated testset
+  teacherId: string;
+  studentId: string;
+  identification?: string; // student name or id
+  state: TestsetStateType;
+  sessionIds: string[]; // references to individual assessment sessions
+  sessions?: Session[]; // Optional populated sessions
+  currentSessionIndex?: number; // which assessment is currently active
+  startedAt?: number;
+  completedAt?: number;
+}
+
+export interface TestsetResult {
+  testsetSessionId: string;
+  testsetId: string;
+  studentId: string;
+  identification?: string;
+  state: TestsetStateType;
+  sessions: Session[];
+}
+
+export interface ItemWithScores {
+  identifier: string;
+  response: string;
+  score: number;
 }
