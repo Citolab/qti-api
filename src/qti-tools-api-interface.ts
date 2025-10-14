@@ -38,4 +38,16 @@ export interface IQtiToolsApi {
   getPackages: () => Promise<PackagesListResult>;
   deletePackage: (packageId: string) => Promise<DeleteResult>;
   getPackageInfo: (packageId: string) => Promise<PackageInfo>;
+
+  // Feedback submission
+  submitFeedback: (
+    feedbackData: {
+      type: string;
+      description: string;
+      feedbackId: string;
+      email?: string;
+      pageUrl?: string;
+    },
+    screenshot?: File
+  ) => Promise<{ success: boolean; message: string }>;
 }

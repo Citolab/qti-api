@@ -369,4 +369,45 @@ export class QtiToolsApi implements IQtiToolsApi {
     });
     return;
   }
+
+  // Feedback submission method
+  async submitFeedback(
+    feedbackData: {
+      type: string;
+      description: string;
+      feedbackId: string;
+      email?: string;
+      pageUrl?: string;
+    },
+    screenshot?: File
+  ): Promise<{ success: boolean; message: string }> {
+    const formData = new FormData();
+
+    // Add required fields
+    formData.append("type", feedbackData.type);
+    formData.append("description", feedbackData.description);
+    formData.append("feedbackId", feedbackData.feedbackId);
+
+    // Add optional fields
+    if (feedbackData.email) {
+      formData.append("email", feedbackData.email);
+    }
+    if (feedbackData.pageUrl) {
+      formData.append("pageUrl", feedbackData.pageUrl);
+    }
+
+    // Add screenshot if provided
+    if (screenshot) {
+      formData.append("screenshot", screenshot);
+    }
+
+    const response = await this.axios.post("/feedback", formData, {
+      timeout: 30000, // 30 seconds timeout
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  }
 }
