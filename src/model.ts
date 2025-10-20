@@ -136,6 +136,7 @@ export interface Session extends BaseSession {
   itemIds?: string[];
   canStart?: boolean;
   startFrom?: number;
+  password?: string;
   endAt?: number;
   testScore?: number;
   testsetSessionId?: string; // Reference to parent testset session if part of a testset
@@ -200,6 +201,7 @@ export interface Assessment extends AssessmentBasicInfo, ObjectBase {
   startFrom?: number;
   endAt?: number;
   startCode?: string;
+  isDigital?: boolean;
   settings?: AssessmentSettings;
 }
 
@@ -339,12 +341,12 @@ export interface TestsetSession extends ObjectBase {
   testsetId: string;
   testset?: Testset; // Optional populated testset
   teacherId: string;
-  studentId: string;
   identification?: string; // student name or id
   state: TestsetStateType;
   sessionIds: string[]; // references to individual assessment sessions
   sessions?: Session[]; // Optional populated sessions
   currentSessionIndex?: number; // which assessment is currently active
+  password?: string; // Optional password for the session
   startedAt?: number;
   completedAt?: number;
 }
@@ -352,7 +354,6 @@ export interface TestsetSession extends ObjectBase {
 export interface TestsetResult {
   testsetSessionId: string;
   testsetId: string;
-  studentId: string;
   identification?: string;
   state: TestsetStateType;
   sessions: Session[];

@@ -367,8 +367,13 @@ export class QtiApi implements IQtiDataApi {
     }
   };
 
-  getStudentProgress = async () => {
+  reloadSession = async () => {
     const response = await this.axios.get<Session>("session/info");
+    return response.data;
+  };
+
+  reloadTestsetSessions = async () => {
+    const response = await this.axios.get<TestsetSession>("testsetSession/info");
     return response.data;
   };
 
@@ -456,7 +461,7 @@ export class QtiApi implements IQtiDataApi {
     }
 
     const testsetSessionResponse = await this.axios.post<TestsetSession>(
-      `/testset/session/start`,
+      `/testsetSession/start`,
       {
         code: config.code,
         identification: config.identification,

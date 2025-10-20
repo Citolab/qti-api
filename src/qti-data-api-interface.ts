@@ -43,6 +43,8 @@ export interface IQtiDataApi {
     id: string,
     data: Partial<Session>
   ) => Promise<void>;
+  reloadSession: () => Promise<Session>;
+  reloadTestsetSessions: () => Promise<TestsetSession>;
   // Testset-related methods
   getTestsetSession: (code: string) => Promise<TestsetSession>;
   getTestsetResult: (testsetSessionId: string) => Promise<TestsetResult>;
