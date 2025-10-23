@@ -1,2 +1,2 @@
-export * from "./firebase-student";
-export * from "./firebase-teacher";
+export * from "./firebase-student.js";
+export * from "./firebase-teacher.js";

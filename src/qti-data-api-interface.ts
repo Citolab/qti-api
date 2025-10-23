@@ -7,7 +7,7 @@ import {
   TestsetSession,
   UserInfo,
   UserInfoWithToken,
-} from "./model";
+} from "./model.js";
 
 export interface IQtiDataApi {
   apiUrl: string;

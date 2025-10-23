@@ -6,7 +6,7 @@ import {
   PackageInfo,
   PackagesListResult,
   UploadResult,
-} from "./model";
+} from "./model.js";
 
 export interface IQtiToolsApi {
   // Authentication token

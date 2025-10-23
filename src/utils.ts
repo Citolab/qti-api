@@ -5,7 +5,7 @@ import axios, {
   AxiosRequestConfig,
   AxiosResponse,
 } from "axios";
-import { ItemWithScores } from "./model";
+import { ItemWithScores } from "./model.js";
 
 export function removeDoubleSlashes(str: string) {
   const singleForwardSlashes = str

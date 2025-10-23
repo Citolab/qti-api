@@ -13,13 +13,16 @@ import {
   Testset,
   TestsetSession,
   TestsetResult,
-} from "./model";
-import { IQtiTeacherApi, ITeacherAuthProvider } from "./qti-teacher-interface";
+} from "./model.js";
+import {
+  IQtiTeacherApi,
+  ITeacherAuthProvider,
+} from "./qti-teacher-interface.js";
 import {
   getNewToken,
   getRefreshTokenAndRetry,
   removeDoubleSlashes,
-} from "./utils";
+} from "./utils.js";
 import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
 
 export class QtiTeacherApi implements IQtiTeacherApi {

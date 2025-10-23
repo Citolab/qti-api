@@ -5,8 +5,8 @@ import {
   SessionStateType,
   UserInfoWithToken,
   TestsetSession,
-} from "./model";
-import { IQtiDataApi } from "./qti-data-api-interface";
+} from "./model.js";
+import { IQtiDataApi } from "./qti-data-api-interface.js";
 
 // This is a wrapper around the QtiApi that stores the data in local storage.
 // Package is retrieved from the server

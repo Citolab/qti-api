@@ -8,14 +8,14 @@ import {
   LogEntry,
   UserInfoWithToken,
   TestsetSession,
-} from "./model";
+} from "./model.js";
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import {
   AuthStudentResult,
   IAuthStudentProvider,
   IQtiDataApi,
-} from "./qti-data-api-interface";
-import { dateId, getRefreshTokenAndRetry } from "./utils";
+} from "./qti-data-api-interface.js";
+import { dateId, getRefreshTokenAndRetry } from "./utils.js";
 export class QtiApi implements IQtiDataApi {
   public axios: AxiosInstance = {} as AxiosInstance;
   public userKey = "";

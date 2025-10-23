@@ -1,9 +1,9 @@
-import { AuthStatus } from "../model";
+import { AuthStatus } from "../model.js";
 import {
   AuthStudentResult,
   IAuthStudentProvider,
   IQtiDataApi,
-} from "../qti-data-api-interface";
+} from "../qti-data-api-interface.js";
 import axios from "axios";
 
 export class FirebaseAuthStudentProvider implements IAuthStudentProvider {

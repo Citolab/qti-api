@@ -11,7 +11,7 @@ import {
   Testset,
   TestsetSession,
   TestsetResult,
-} from "./model";
+} from "./model.js";
 import { AxiosInstance } from "axios";
 
 export interface IQtiTeacherApi {

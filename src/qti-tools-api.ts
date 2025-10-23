@@ -1,8 +1,8 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 
-import { ITeacherAuthProvider } from "./qti-teacher-interface";
-import { getRefreshTokenAndRetry } from "./utils";
-import { IQtiToolsApi } from "./qti-tools-api-interface";
+import { ITeacherAuthProvider } from "./qti-teacher-interface.js";
+import { getRefreshTokenAndRetry } from "./utils.js";
+import { IQtiToolsApi } from "./qti-tools-api-interface.js";
 import {
   Assessment,
   AssessmentSettings,
@@ -11,7 +11,7 @@ import {
   PackageInfo,
   PackagesListResult,
   UploadResult,
-} from "./model";
+} from "./model.js";
 
 export class QtiToolsApi implements IQtiToolsApi {
   private failedRequests = 0;
