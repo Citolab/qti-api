@@ -5,7 +5,6 @@ import {
   LogEntry,
   Session,
   TestsetSession,
-  TestsetResult,
   UserInfo,
   UserInfoWithToken,
 } from "./model";
@@ -45,9 +44,14 @@ export interface IQtiDataApi {
   ) => Promise<void>;
   reloadSession: () => Promise<Session>;
   reloadTestsetSessions: () => Promise<TestsetSession>;
-  // Testset-related methods
-  getTestsetSession: (code: string) => Promise<TestsetSession>;
-  getTestsetResult: (testsetSessionId: string) => Promise<TestsetResult>;
+  submitFeedback: (feedbackData: {
+    type: string;
+    description: string;
+    feedbackId: string;
+    email?: string;
+    pageUrl?: string;
+    screenshot?: File;
+  }) => Promise<void>;
 }
 
 // Define authentication provider interface

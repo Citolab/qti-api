@@ -5,7 +5,6 @@ import {
   SessionStateType,
   UserInfoWithToken,
   TestsetSession,
-  TestsetResult,
 } from "./model";
 import { IQtiDataApi } from "./qti-data-api-interface";
 
@@ -94,13 +93,18 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
     return this.qtiApi.authenticateAnonymously();
   };
 
-  getStudentProgress = async () => {
+  reloadSession = async (): Promise<Session> => {
     // TODO: update this when storing responses?
     const stored = localStorage.getItem(`${this.userInfo?.code}_progress`);
     if (stored) {
       return JSON.parse(stored) as Session;
     }
-    return null;
+    // If no stored data, delegate to the underlying API
+    return this.qtiApi.reloadSession();
+  };
+
+  reloadTestsetSessions = async () => {
+    return this.qtiApi.reloadTestsetSessions();
   };
 
   logout = () => {
@@ -144,11 +148,14 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
     return this.qtiApi.authenticateByTestsetCode(config);
   };
 
-  getTestsetSession = async (code: string) => {
-    return this.qtiApi.getTestsetSession(code);
-  };
-
-  getTestsetResult = async (testsetSessionId: string) => {
-    return this.qtiApi.getTestsetResult(testsetSessionId);
+  submitFeedback = async (feedbackData: {
+    type: string;
+    description: string;
+    feedbackId: string;
+    email?: string;
+    pageUrl?: string;
+    screenshot?: File;
+  }) => {
+    return this.qtiApi.submitFeedback(feedbackData);
   };
 }

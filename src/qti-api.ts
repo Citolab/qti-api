@@ -8,7 +8,6 @@ import {
   LogEntry,
   UserInfoWithToken,
   TestsetSession,
-  TestsetResult,
 } from "./model";
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import {
@@ -487,20 +486,35 @@ export class QtiApi implements IQtiDataApi {
     return testsetSession;
   };
 
-  getTestsetSession = async (code: string): Promise<TestsetSession> => {
-    const response = await this.axios.get<TestsetSession>(
-      `/testset/session/${code}`
-    );
-    return response.data;
-  };
+  submitFeedback = async (feedbackData: {
+    type: string;
+    description: string;
+    feedbackId: string;
+    email?: string;
+    pageUrl?: string;
+    screenshot?: File;
+  }) => {
+    const formData = new FormData();
+    formData.append("type", feedbackData.type);
+    formData.append("description", feedbackData.description);
+    formData.append("feedbackId", feedbackData.feedbackId);
 
-  getTestsetResult = async (
-    testsetSessionId: string
-  ): Promise<TestsetResult> => {
-    const response = await this.axios.get<TestsetResult>(
-      `/testset/session/${testsetSessionId}/result`
-    );
-    return response.data;
+    if (feedbackData.email) {
+      formData.append("email", feedbackData.email);
+    }
+    if (feedbackData.pageUrl) {
+      formData.append("pageUrl", feedbackData.pageUrl);
+    }
+    if (feedbackData.screenshot) {
+      formData.append("screenshot", feedbackData.screenshot);
+    }
+
+    await this.axios.post("/feedback", formData, {
+      timeout: 30000,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
   };
 
   private anonymousLogin = async () => {
