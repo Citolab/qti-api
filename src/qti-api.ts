@@ -373,7 +373,9 @@ export class QtiApi implements IQtiDataApi {
   };
 
   reloadTestsetSessions = async () => {
-    const response = await this.axios.get<TestsetSession>("testsetSession/info");
+    const response = await this.axios.get<TestsetSession>(
+      "testsetSession/info"
+    );
     return response.data;
   };
 
