@@ -349,6 +349,7 @@ export interface TestsetSession extends ObjectBase {
   password?: string; // Optional password for the session
   startedAt?: number;
   completedAt?: number;
+  isDemo?: boolean;
 }
 
 export interface TestsetResult {
