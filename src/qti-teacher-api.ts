@@ -410,7 +410,12 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     return result.data;
   }
   public async getSessions(): Promise<Session[]> {
-    const result = await this.axios.get<Session[]>("/students");
+    const result = await this.axios.get<Session[]>("/sessions");
+    return result.data;
+  }
+
+  public async getTestsetSessions(): Promise<TestsetSession[]> {
+    const result = await this.axios.get<TestsetSession[]>("/testsetsessions");
     return result.data;
   }
 
@@ -601,14 +606,6 @@ export class QtiTeacherApi implements IQtiTeacherApi {
       "/testset-sessions",
       config
     );
-    return result.data;
-  }
-
-  public async getTestsetSessions(testsetId?: string) {
-    const url = testsetId
-      ? `/testset-sessions?testsetId=${testsetId}`
-      : "/testset-sessions";
-    const result = await this.axios.get<TestsetSession[]>(url);
     return result.data;
   }
 

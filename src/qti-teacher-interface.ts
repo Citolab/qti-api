@@ -118,8 +118,7 @@ export interface IQtiTeacherApi {
     identification?: string;
     metadata?: unknown;
   }) => Promise<TestsetSession>;
-  getTestsetSessions: (testsetId?: string) => Promise<TestsetSession[]>;
-  getTestsetSession: (testsetSessionId: string) => Promise<TestsetSession>;
+  getTestsetSessions: () => Promise<TestsetSession[]>;
   deleteTestsetSession: (testsetSessionId: string) => Promise<void>;
   resetTestsetSession: (testsetSessionId: string) => Promise<void>;
 
