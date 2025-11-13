@@ -23,7 +23,7 @@ import {
   getRefreshTokenAndRetry,
   removeDoubleSlashes,
 } from "./utils.js";
-import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
+import { ItemContext } from "@citolab/qti-components";
 
 export class QtiTeacherApi implements IQtiTeacherApi {
   private failedRequests = 0;

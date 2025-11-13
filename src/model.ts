@@ -1,9 +1,8 @@
 import {
-  integer,
+  ItemContext,
   ResponseInteraction,
-} from "@citolab/qti-components/exports/expression-result.js";
-import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
-import { TestContext } from "@citolab/qti-components/qti-test";
+  TestContext,
+} from "@citolab/qti-components";
 import { AxiosInstance } from "axios";
 
 export enum SessionStateEnum {
@@ -308,8 +307,8 @@ export interface DeleteResult {
 }
 
 export interface Delivery extends ObjectBase {
-  startedAt?: integer;
-  endAt?: integer;
+  startedAt?: number;
+  endAt?: number;
   state: DeliveryStateEnum;
   canStop?: boolean;
   canRestart?: boolean;

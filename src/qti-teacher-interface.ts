@@ -1,4 +1,4 @@
-import { ItemContext } from "@citolab/qti-components/exports/item.context.js";
+import { ItemContext } from "@citolab/qti-components";
 import {
   Assessment,
   StudentResult,
