@@ -136,7 +136,7 @@ export interface Session extends BaseSession {
   canStart?: boolean;
   startFrom?: number;
   password?: string;
-  endAt?: number;
+  endedAt?: number;
   testScore?: number;
   testsetSessionId?: string; // Reference to parent testset session if part of a testset
   sequenceInTestset?: number; // Order within the testset (0-based)
@@ -198,7 +198,7 @@ export interface Assessment extends AssessmentBasicInfo, ObjectBase {
   packageName?: string;
   canStart?: boolean;
   startFrom?: number;
-  endAt?: number;
+  endedAt?: number;
   startCode?: string;
   isDigital?: boolean;
   settings?: AssessmentSettings;
@@ -308,7 +308,7 @@ export interface DeleteResult {
 
 export interface Delivery extends ObjectBase {
   startedAt?: number;
-  endAt?: number;
+  endedAt?: number;
   state: DeliveryStateEnum;
   canStop?: boolean;
   canRestart?: boolean;
@@ -346,7 +346,7 @@ export interface TestsetSession extends ObjectBase {
   currentSessionIndex?: number; // which assessment is currently active
   password?: string; // Optional password for the session
   startedAt?: number;
-  completedAt?: number;
+  endedAt?: number;
   isDemo?: boolean;
 }
 
