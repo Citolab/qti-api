@@ -309,8 +309,7 @@ export interface DeleteResult {
 
 export interface Delivery extends ObjectBase {
   startedAt?: integer;
-  completedAt?: integer;
-  endTime?: integer;
+  endAt?: integer;
   state: DeliveryStateEnum;
   canStop?: boolean;
   canRestart?: boolean;
