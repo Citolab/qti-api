@@ -78,6 +78,18 @@ export interface IQtiTeacherApi {
     target: "teacher" | "reviewer"
   ): Promise<T[]>;
 
+  getItemStatsByDelivery<T extends ItemStatisticsWithResponses<UniqueResponse>>(
+    deliveryId: string,
+    target: "teacher" | "reviewer"
+  ): Promise<T[]>;
+
+  getItemStatsByDeliveryCode<
+    T extends ItemStatisticsWithResponses<UniqueResponse>
+  >(
+    deliveryCode: string,
+    target: "teacher" | "reviewer"
+  ): Promise<T[]>;
+
   scoreDelivery: (deliveryId: string) => Promise<{ scoredSessions: number }>;
 
   updateItemStatResponseScore: (

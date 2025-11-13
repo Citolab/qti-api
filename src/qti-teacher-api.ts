@@ -436,6 +436,40 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     return result.data as T[];
   }
 
+  public async getItemStatsByDelivery<
+    T extends ItemStatisticsWithResponses<UniqueResponse>
+  >(
+    deliveryId: string,
+    target: "teacher" | "reviewer" = "teacher"
+  ): Promise<T[]> {
+    const result = await this.axios.get<T[]>(
+      `/delivery/${deliveryId}/itemStats`,
+      {
+        params: {
+          role: target,
+        },
+      }
+    );
+    return result.data as T[];
+  }
+
+  public async getItemStatsByDeliveryCode<
+    T extends ItemStatisticsWithResponses<UniqueResponse>
+  >(
+    deliveryCode: string,
+    target: "teacher" | "reviewer" = "teacher"
+  ): Promise<T[]> {
+    const result = await this.axios.get<T[]>(
+      `/delivery/${deliveryCode}/itemStats`,
+      {
+        params: {
+          role: target,
+        },
+      }
+    );
+    return result.data as T[];
+  }
+
   /**
    * Create a new group delivery/activity
    * @returns Promise containing the generated activity code
