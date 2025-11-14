@@ -100,16 +100,33 @@ export interface StudentResult<T extends ItemContext> {
 
 export interface UniqueResponse {
   id: string;
+  responseIdentifier: string;
   value: string;
   count: number;
-  studentIds: string[];
+  sessionIds: string[];
   score: number | null;
   scoreExternal: number | null;
 }
 export interface ItemStatistics {
   itemId: string;
+  responseIdentifier: string;
   count: number;
   numberCorrect: number;
+}
+
+export interface BaseStatistics extends ObjectBase {
+  lastUpdated: number;
+  itemStatistics: ItemStatisticsWithResponses<UniqueResponse>[];
+}
+
+export interface AssessmentStatistics extends BaseStatistics {
+  assessmentId: string;
+  assessmentName: string;
+}
+
+export interface DeliveryStatistics extends AssessmentStatistics {
+  deliveryId: string;
+  deliveryCode: string;
 }
 
 export interface ItemStatisticsWithResponses<

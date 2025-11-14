@@ -11,6 +11,8 @@ import {
   Testset,
   TestsetSession,
   TestsetResult,
+  DeliveryStatistics,
+  AssessmentStatistics,
 } from "./model.js";
 import { AxiosInstance } from "axios";
 
@@ -72,23 +74,15 @@ export interface IQtiTeacherApi {
     session: BaseSession
   ) => Promise<void>;
 
-  // statistics and results
-  getItemStats<T extends ItemStatisticsWithResponses<UniqueResponse>>(
-    assessmentId: string,
-    target: "teacher" | "reviewer"
-  ): Promise<T[]>;
-
-  getItemStatsByDelivery<T extends ItemStatisticsWithResponses<UniqueResponse>>(
+  getItemStatsByDelivery(
     deliveryId: string,
     target: "teacher" | "reviewer"
-  ): Promise<T[]>;
+  ): Promise<DeliveryStatistics[]>;
 
-  getItemStatsByDeliveryCode<
-    T extends ItemStatisticsWithResponses<UniqueResponse>
-  >(
-    deliveryCode: string,
+  getItemStatsByAssessment(
+    assessmentId: string,
     target: "teacher" | "reviewer"
-  ): Promise<T[]>;
+  ): Promise<AssessmentStatistics[]>;
 
   scoreDelivery: (deliveryId: string) => Promise<{ scoredSessions: number }>;
 

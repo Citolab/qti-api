@@ -13,6 +13,8 @@ import {
   Testset,
   TestsetSession,
   TestsetResult,
+  AssessmentStatistics,
+  DeliveryStatistics,
 } from "./model.js";
 import {
   IQtiTeacherApi,
@@ -419,30 +421,11 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     return result.data;
   }
 
-  public async getItemStats<
-    T extends ItemStatisticsWithResponses<UniqueResponse>
-  >(
-    assessmentId: string,
-    target: "teacher" | "reviewer" = "teacher"
-  ): Promise<T[]> {
-    const result = await this.axios.get<T[]>(
-      `/assessment/${assessmentId}/itemStats`,
-      {
-        params: {
-          role: target,
-        },
-      }
-    );
-    return result.data as T[];
-  }
-
-  public async getItemStatsByDelivery<
-    T extends ItemStatisticsWithResponses<UniqueResponse>
-  >(
+  public async getItemStatsByDelivery(
     deliveryId: string,
     target: "teacher" | "reviewer" = "teacher"
-  ): Promise<T[]> {
-    const result = await this.axios.get<T[]>(
+  ): Promise<DeliveryStatistics[]> {
+    const result = await this.axios.get<DeliveryStatistics[]>(
       `/delivery/${deliveryId}/itemStats`,
       {
         params: {
@@ -450,24 +433,22 @@ export class QtiTeacherApi implements IQtiTeacherApi {
         },
       }
     );
-    return result.data as T[];
+    return result.data;
   }
 
-  public async getItemStatsByDeliveryCode<
-    T extends ItemStatisticsWithResponses<UniqueResponse>
-  >(
-    deliveryCode: string,
+  public async getItemStatsByAssessment(
+    assessmentId: string,
     target: "teacher" | "reviewer" = "teacher"
-  ): Promise<T[]> {
-    const result = await this.axios.get<T[]>(
-      `/delivery/${deliveryCode}/itemStats`,
+  ): Promise<AssessmentStatistics[]> {
+    const result = await this.axios.get<AssessmentStatistics[]>(
+      `/assessment/${assessmentId}/itemStats`,
       {
         params: {
           role: target,
         },
       }
     );
-    return result.data as T[];
+    return result.data;
   }
 
   /**
