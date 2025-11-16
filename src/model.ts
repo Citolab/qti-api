@@ -114,7 +114,7 @@ export interface ItemStatistics {
   numberCorrect: number;
 }
 
-export interface BaseStatistics extends ObjectBase {
+export interface BaseStatistics {
   lastUpdated: number;
   itemStatistics: ItemStatisticsWithResponses<UniqueResponse>[];
 }
