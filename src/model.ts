@@ -104,6 +104,7 @@ export interface UniqueResponse {
   value: string;
   count: number;
   sessionIds: string[];
+  responseIds: string[];
   score: number | null;
   scoreExternal: number | null;
 }
