@@ -1,4 +1,4 @@
-import { ItemContext } from "@citolab/qti-components";
+import type { ItemContext } from "./types/qti-components.js";
 import axios, {
   AxiosError,
   AxiosInstance,

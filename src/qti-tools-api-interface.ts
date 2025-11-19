@@ -5,6 +5,8 @@ import {
   DeleteResult,
   PackageInfo,
   PackagesListResult,
+  PlausibleAnswer,
+  PlausibleAnswerScoreUpdate,
   UploadResult,
 } from "./model.js";
 
@@ -38,6 +40,18 @@ export interface IQtiToolsApi {
   getPackages: () => Promise<PackagesListResult>;
   deletePackage: (packageId: string) => Promise<DeleteResult>;
   getPackageInfo: (packageId: string) => Promise<PackageInfo>;
+
+  // Plausible answers
+  getPlausibleAnswers: (assessmentId: string) => Promise<PlausibleAnswer[]>;
+  getPlausibleAnswersForItem: (
+    assessmentId: string,
+    itemIdentifier: string
+  ) => Promise<PlausibleAnswer>;
+  updatePlausibleAnswerScores: (
+    assessmentId: string,
+    itemIdentifier: string,
+    updates: PlausibleAnswerScoreUpdate[]
+  ) => Promise<PlausibleAnswer>;
 
   // Feedback submission
   submitFeedback: (

@@ -10,6 +10,8 @@ import {
   DeleteResult,
   PackageInfo,
   PackagesListResult,
+  PlausibleAnswer,
+  PlausibleAnswerScoreUpdate,
   UploadResult,
 } from "./model.js";
 
@@ -358,6 +360,90 @@ export class QtiToolsApi implements IQtiToolsApi {
   async getPackageInfo(packageId: string): Promise<PackageInfo> {
     const response = await this.axios.get<PackageInfo>(`/package/${packageId}`);
     return response.data;
+  }
+
+  async getPlausibleAnswers(assessmentId: string): Promise<PlausibleAnswer[]> {
+    const response = await this.axios.get<any[]>(
+      `/plausible-answers/${assessmentId}`
+    );
+    // Transform snake_case to camelCase
+    return response.data.map((item: any) => ({
+      id: item.id,
+      createdAt: item.createdAt || item.created_at,
+      updatedAt: item.updatedAt || item.updated_at,
+      createdBy: item.createdBy || item.created_by,
+      assessmentId: item.assessmentId || item.assessment_id,
+      itemIdentifier: item.itemIdentifier || item.item_identifier,
+      generatedAnswers: (item.generatedAnswers || item.generated_answers || []).map((ans: any) => ({
+        id: ans.id,
+        answerText: ans.answerText || ans.answer_text,
+        score: ans.score,
+        certainty: ans.certainty,
+        notes: ans.notes,
+        correctedScore: ans.correctedScore ?? ans.corrected_score ?? null,
+      })),
+      generatedAt: item.generatedAt || item.generated_at,
+    }));
+  }
+
+  async getPlausibleAnswersForItem(
+    assessmentId: string,
+    itemIdentifier: string
+  ): Promise<PlausibleAnswer> {
+    const response = await this.axios.get<any>(
+      `/plausible-answers/${assessmentId}/${itemIdentifier}`
+    );
+    const item = response.data;
+    // Transform snake_case to camelCase
+    return {
+      id: item.id,
+      createdAt: item.createdAt || item.created_at,
+      updatedAt: item.updatedAt || item.updated_at,
+      createdBy: item.createdBy || item.created_by,
+      assessmentId: item.assessmentId || item.assessment_id,
+      itemIdentifier: item.itemIdentifier || item.item_identifier,
+      generatedAnswers: (item.generatedAnswers || item.generated_answers || []).map((ans: any) => ({
+        id: ans.id,
+        answerText: ans.answerText || ans.answer_text,
+        score: ans.score,
+        certainty: ans.certainty,
+        notes: ans.notes,
+        correctedScore: ans.correctedScore ?? ans.corrected_score ?? null,
+      })),
+      generatedAt: item.generatedAt || item.generated_at,
+    };
+  }
+
+  async updatePlausibleAnswerScores(
+    assessmentId: string,
+    itemIdentifier: string,
+    updates: PlausibleAnswerScoreUpdate[]
+  ): Promise<PlausibleAnswer> {
+    const response = await this.axios.put<any>(
+      `/plausible-answers/${assessmentId}/${itemIdentifier}`,
+      {
+        generatedAnswers: updates,
+      }
+    );
+    const item = response.data;
+    // Transform snake_case to camelCase
+    return {
+      id: item.id,
+      createdAt: item.createdAt || item.created_at,
+      updatedAt: item.updatedAt || item.updated_at,
+      createdBy: item.createdBy || item.created_by,
+      assessmentId: item.assessmentId || item.assessment_id,
+      itemIdentifier: item.itemIdentifier || item.item_identifier,
+      generatedAnswers: (item.generatedAnswers || item.generated_answers || []).map((ans: any) => ({
+        id: ans.id,
+        answerText: ans.answerText || ans.answer_text,
+        score: ans.score,
+        certainty: ans.certainty,
+        notes: ans.notes,
+        correctedScore: ans.correctedScore ?? ans.corrected_score ?? null,
+      })),
+      generatedAt: item.generatedAt || item.generated_at,
+    };
   }
 
   async updateAssessmentSettings(
