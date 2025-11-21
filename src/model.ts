@@ -1,8 +1,8 @@
-import {
+import type {
   ItemContext,
   ResponseInteraction,
   TestContext,
-} from "@citolab/qti-components";
+} from "./types/qti-components.js";
 import { AxiosInstance } from "axios";
 
 export enum SessionStateEnum {
@@ -195,6 +195,7 @@ export interface ItemInfo {
   maxScore?: number;
   weight?: number;
   manualScoringRequired?: boolean;
+  plausibleAnswers?: GeneratedAnswer[];
 }
 
 // Define a type instead of an interface for this case
@@ -220,6 +221,28 @@ export interface Assessment extends AssessmentBasicInfo, ObjectBase {
   startCode?: string;
   isDigital?: boolean;
   settings?: AssessmentSettings;
+}
+
+export interface GeneratedAnswer {
+  id?: number;
+  answerText: string;
+  score: number;
+  certainty?: number;
+  notes?: string | null;
+  correctedScore?: number | null;
+}
+
+export interface PlausibleAnswer extends ObjectBase {
+  assessmentId: string;
+  itemIdentifier: string;
+  generatedAnswers: GeneratedAnswer[];
+  generatedAt: number;
+}
+
+export interface PlausibleAnswerScoreUpdate {
+  id?: number;
+  answerText?: string;
+  correctedScore: number | null;
 }
 
 export interface AssessmentSettings {
