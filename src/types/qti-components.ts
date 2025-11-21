@@ -1,5 +1,5 @@
-export type { ItemContext } from "@citolab/qti-components/exports/item.context.js";
-export type { TestContext } from "@citolab/qti-components/exports/test.context.js";
+export type { ItemContext } from "@citolab/qti-components";
+export type { TestContext } from "@citolab/qti-components";
 
 export interface ResponseInteraction {
   responseIdentifier: string;
@@ -7,4 +7,3 @@ export interface ResponseInteraction {
   sessionIds?: string[];
   [key: string]: unknown;
 }
-
