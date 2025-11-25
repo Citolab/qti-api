@@ -467,6 +467,23 @@ export class QtiTeacherApi implements IQtiTeacherApi {
   }
 
   /**
+   * Update the display name of a delivery
+   * @param deliveryCode - The delivery code to update
+   * @param name - The new delivery name
+   * @returns Promise containing the updated delivery
+   */
+  public async updateDeliveryName(
+    deliveryCode: string,
+    name: string
+  ): Promise<Delivery> {
+    const result = await this.axios.post<Delivery>("/delivery/updateName", {
+      code: deliveryCode,
+      name,
+    });
+    return result.data;
+  }
+
+  /**
    * Start a delivery
    * @param assessmentId - The assessment ID to start delivery for
    * @returns Promise containing the delivery information

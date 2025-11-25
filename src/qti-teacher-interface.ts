@@ -56,6 +56,10 @@ export interface IQtiTeacherApi {
   stopDelivery: (deliveryCode: string) => Promise<Delivery>;
   startDelivery: (deliveryCode: string) => Promise<Delivery>;
   deleteDelivery: (deliveryCode: string) => Promise<void>;
+  updateDeliveryName: (
+    deliveryCode: string,
+    name: string
+  ) => Promise<Delivery>;
   getAssessmentDeliveries: (assessmentId: string) => Promise<Delivery[]>;
   downloadResultsByDeliveryCode: (deliveryCode: string) => Promise<Blob>;
   downloadResultsByAssessmentId: (assessmentId: string) => Promise<Blob>;
