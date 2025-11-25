@@ -249,7 +249,8 @@ export interface AssessmentSettings {
   forceFullScreen: boolean;
   responsive: boolean;
   backendScoring: boolean;
-  studentIdentification: boolean;
+  studentIdentification: "number" | "name" | "none";
+  identificationRegex?: string | null;
   dimensions?: { width: number; height: number } | null;
 }
 
@@ -354,6 +355,7 @@ export interface Delivery extends ObjectBase {
   canStop?: boolean;
   canRestart?: boolean;
   assessmentId: string;
+  name?: string;
 }
 
 export enum TestsetStateEnum {
@@ -381,6 +383,8 @@ export interface TestsetSession extends ObjectBase {
   testset?: Testset; // Optional populated testset
   teacherId: string;
   identification?: string; // student name or id
+  firstname?: string;
+  lastname?: string;
   state: TestsetStateType;
   sessionIds: string[]; // references to individual assessment sessions
   sessions?: Session[]; // Optional populated sessions
