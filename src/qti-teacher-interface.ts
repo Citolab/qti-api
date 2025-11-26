@@ -98,6 +98,10 @@ export interface IQtiTeacherApi {
     target: "teacher" | "reviewer"
   ) => Promise<void>;
   getAssessment: (assessmentId: string) => Promise<Assessment>;
+  updateAssessmentName: (
+    assessmentId: string,
+    name: string
+  ) => Promise<Assessment>;
   getStudentResults: <T extends ItemContext, T2 extends StudentResult<T>[]>(
     assessmentId: string
   ) => Promise<T2>;

@@ -360,6 +360,23 @@ export class QtiTeacherApi implements IQtiTeacherApi {
     return value.data;
   }
 
+  /**
+   * Update the display name of an assessment
+   * @param assessmentId - The assessment ID to update
+   * @param name - The new assessment name
+   * @returns Promise containing the updated assessment
+   */
+  public async updateAssessmentName(
+    assessmentId: string,
+    name: string
+  ): Promise<Assessment> {
+    const result = await this.axios.post<Assessment>("/assessment/updateName", {
+      assessmentId,
+      name,
+    });
+    return result.data;
+  }
+
   public async deleteStudent(code: string): Promise<void> {
     await this.axios.delete(`/session/${code}`);
   }
