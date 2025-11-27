@@ -374,7 +374,11 @@ export class QtiToolsApi implements IQtiToolsApi {
       createdBy: item.createdBy || item.created_by,
       assessmentId: item.assessmentId || item.assessment_id,
       itemIdentifier: item.itemIdentifier || item.item_identifier,
-      generatedAnswers: (item.generatedAnswers || item.generated_answers || []).map((ans: any) => ({
+      generatedAnswers: (
+        item.generatedAnswers ||
+        item.generated_answers ||
+        []
+      ).map((ans: any) => ({
         id: ans.id,
         answerText: ans.answerText || ans.answer_text,
         score: ans.score,
@@ -402,7 +406,11 @@ export class QtiToolsApi implements IQtiToolsApi {
       createdBy: item.createdBy || item.created_by,
       assessmentId: item.assessmentId || item.assessment_id,
       itemIdentifier: item.itemIdentifier || item.item_identifier,
-      generatedAnswers: (item.generatedAnswers || item.generated_answers || []).map((ans: any) => ({
+      generatedAnswers: (
+        item.generatedAnswers ||
+        item.generated_answers ||
+        []
+      ).map((ans: any) => ({
         id: ans.id,
         answerText: ans.answerText || ans.answer_text,
         score: ans.score,
@@ -434,7 +442,11 @@ export class QtiToolsApi implements IQtiToolsApi {
       createdBy: item.createdBy || item.created_by,
       assessmentId: item.assessmentId || item.assessment_id,
       itemIdentifier: item.itemIdentifier || item.item_identifier,
-      generatedAnswers: (item.generatedAnswers || item.generated_answers || []).map((ans: any) => ({
+      generatedAnswers: (
+        item.generatedAnswers ||
+        item.generated_answers ||
+        []
+      ).map((ans: any) => ({
         id: ans.id,
         answerText: ans.answerText || ans.answer_text,
         score: ans.score,
@@ -444,6 +456,48 @@ export class QtiToolsApi implements IQtiToolsApi {
       })),
       generatedAt: item.generatedAt || item.generated_at,
     };
+  }
+
+  async getPlausibleAnswerProgress(assessmentId: string): Promise<{
+    pending: boolean;
+    totalItems: number;
+    completedItems: number;
+    pendingItems: number;
+  }> {
+    // CheckMate endpoints are under /api/checkmate, not /qti-tools
+    // We need to use the base API URL instead of the tools API URL
+    // The baseUrl already includes /api, so we just replace /qti-tools with /checkmate
+    const baseUrl = this.apiUrl.replace("/qti-tools", "");
+    // Use the axios instance but override the baseURL for this specific request
+    const response = await this.axios.get<{
+      pending: boolean;
+      totalItems: number;
+      completedItems: number;
+      pendingItems: number;
+    }>(`/checkmate/plausible-answers/progress/${assessmentId}`, {
+      baseURL: baseUrl,
+    });
+    return response.data;
+  }
+
+  async getPlausibleAnswerCheckedStatus(assessmentId: string): Promise<{
+    checked: boolean;
+    totalItems: number;
+    checkedItems: number;
+  }> {
+    // CheckMate endpoints are under /api/checkmate, not /qti-tools
+    // We need to use the base API URL instead of the tools API URL
+    // The baseUrl already includes /api, so we just replace /qti-tools with /checkmate
+    const baseUrl = this.apiUrl.replace("/qti-tools", "");
+    // Use the axios instance but override the baseURL for this specific request
+    const response = await this.axios.get<{
+      checked: boolean;
+      totalItems: number;
+      checkedItems: number;
+    }>(`/checkmate/plausible-answers/checked/${assessmentId}`, {
+      baseURL: baseUrl,
+    });
+    return response.data;
   }
 
   async updateAssessmentSettings(

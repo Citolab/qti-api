@@ -52,6 +52,21 @@ export interface IQtiToolsApi {
     itemIdentifier: string,
     updates: PlausibleAnswerScoreUpdate[]
   ) => Promise<PlausibleAnswer>;
+  getPlausibleAnswerProgress: (
+    assessmentId: string
+  ) => Promise<{
+    pending: boolean;
+    totalItems: number;
+    completedItems: number;
+    pendingItems: number;
+  }>;
+  getPlausibleAnswerCheckedStatus: (
+    assessmentId: string
+  ) => Promise<{
+    checked: boolean;
+    totalItems: number;
+    checkedItems: number;
+  }>;
 
   // Feedback submission
   submitFeedback: (
