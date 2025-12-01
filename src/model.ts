@@ -48,7 +48,6 @@ export interface ExtendedTestContext extends Omit<TestContext, "items"> {
   navItemId?: string | null;
   navItemLoading?: boolean;
   navTestLoading?: boolean;
-  state?: SessionStateType;
   items: ExtendedItemContext[];
 }
 
