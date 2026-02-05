@@ -43,6 +43,7 @@ export interface IQtiTeacherApi {
   // assessment packages
   getAssessments: () => Promise<Assessment[]>;
   getPackages: () => Promise<PackageInfo[]>;
+  getResource: (packageId: string, resourcePath: string) => Promise<ArrayBuffer>;
   log: (type: string, data: any) => Promise<void>;
 
   // planning
