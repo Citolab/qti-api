@@ -192,6 +192,24 @@ export class QtiApi implements IQtiDataApi {
     return value.data;
   }
 
+  public async getResource(
+    packageId: string,
+    resourcePath: string
+  ): Promise<ArrayBuffer> {
+    const normalizedPath = resourcePath.replace(/^\/+/, "");
+    const encodedPath = normalizedPath
+      .split("/")
+      .map((segment) => encodeURIComponent(segment))
+      .join("/");
+    const result = await this.axios.get<ArrayBuffer>(
+      `/package/${packageId}/${encodedPath}`,
+      {
+        responseType: "arraybuffer",
+      }
+    );
+    return result.data;
+  }
+
   private _userInfo:
     | (UserInfo & {
         token: string;

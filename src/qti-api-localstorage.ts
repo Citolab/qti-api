@@ -64,6 +64,10 @@ export class QtiApiStoreContextToLocalStorage implements IQtiDataApi {
     return this.qtiApi.getAssessment(assessmentId);
   }
 
+  public async getResource(packageId: string, resourcePath: string) {
+    return this.qtiApi.getResource(packageId, resourcePath);
+  }
+
   private _userInfo: UserInfoWithToken | undefined;
 
   get userInfo(): UserInfoWithToken | undefined {

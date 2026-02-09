@@ -33,6 +33,7 @@ export interface IQtiDataApi {
   ) => Promise<void>;
   getAssessment: (assessmentId: string) => Promise<Assessment>;
   getAssessments: () => Promise<Assessment[]>;
+  getResource: (packageId: string, resourcePath: string) => Promise<ArrayBuffer>;
   setTestContext: (code: string, context: ExtendedTestContext) => Promise<void>;
   getTestContext: (code: string) => Promise<ExtendedTestContext | null>;
   getCurrentUser: () => Promise<UserInfo | null>;
