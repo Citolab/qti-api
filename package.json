@@ -1,6 +1,6 @@
 {
   "name": "@citolab/qti-api",
-  "version": "8.0.38",
+  "version": "8.0.39",
   "private": false,
   "type": "module",
   "description": "A TypeScript library that contains the models and does API calls to a restfull API for handling QTI responses and responses data for teachers/reviewer dashboards.",
