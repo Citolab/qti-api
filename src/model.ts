@@ -131,7 +131,7 @@ export interface DeliveryStatistics extends AssessmentStatistics {
 }
 
 export interface ItemStatisticsWithResponses<
-  ResponseType extends UniqueResponse
+  ResponseType extends UniqueResponse,
 > extends ItemStatistics {
   responses: ResponseType[];
 }
@@ -210,6 +210,7 @@ export interface AssessmentBasicInfo {
 
 export interface Assessment extends AssessmentBasicInfo, ObjectBase {
   assessmentHref?: string;
+  packageBaseHref?: string;
   items: AssessmentItemRefInfo<ItemInfo>[];
   isDemo?: boolean;
   demoCode?: string;
