@@ -24,7 +24,10 @@
     "_test": "jest",
     "lint": "eslint src/**/*.ts",
     "prepublishOnly": "npm run build",
-    "release": "np --no-tests"
+    "release": "np --no-tests",
+    "release:patch": "np patch --no-tests",
+    "release:minor": "np minor --no-tests",
+    "release:major": "np major --no-tests"
   },
   "engines": {
     "node": ">=14"
