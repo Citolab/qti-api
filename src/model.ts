@@ -5,6 +5,21 @@ import type {
 } from "./types/qti-components.js";
 import { AxiosInstance } from "axios";
 
+// QTI API type definitions
+export type AssessmentMetadataType = "text" | "int" | "list";
+
+export type ItemMetadataValue = string | number | null;
+
+export interface AssessmentMetadataDefinition {
+  id: string;
+  name: string;
+  label?: string;
+  description?: string;
+  type: AssessmentMetadataType;
+  color?: string;
+  values?: string[];
+}
+
 export enum SessionStateEnum {
   NOT_GENERATED = "not_generated",
   NOT_AVAILABLE = "not_available",
@@ -196,6 +211,7 @@ export interface ItemInfo {
   weight?: number;
   manualScoringRequired?: boolean;
   plausibleAnswers?: GeneratedAnswer[];
+  metadata?: Record<string, ItemMetadataValue>;
 }
 
 // Define a type instead of an interface for this case
@@ -222,6 +238,7 @@ export interface Assessment extends AssessmentBasicInfo, ObjectBase {
   startCode?: string;
   isDigital?: boolean;
   settings?: AssessmentSettings;
+  metadataDefinitions?: AssessmentMetadataDefinition[];
 }
 
 export interface GeneratedAnswer {
