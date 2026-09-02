@@ -58,3 +58,4 @@ logs
 *.log
 .yalc/*
 yalc.lock
+.opencode
