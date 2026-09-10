@@ -45,7 +45,7 @@
   },
   "homepage": "https://github.com/Citolab/qti-api#readme",
   "peerDependencies": {
-    "@citolab/qti-components": "^8.0.1",
+    "@citolab/qti-components": "^8.0.1 || ^9.1.0",
     "axios": ">=1.7.0"
   },
   "devDependencies": {
