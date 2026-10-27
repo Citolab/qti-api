@@ -1,6 +1,6 @@
 {
   "name": "@citolab/qti-api",
-  "version": "9.2.0",
+  "version": "9.3.0",
   "private": false,
   "type": "module",
   "description": "Shared TypeScript client and models for Citolab QTI backends (Firebase and .NET), with pluggable authentication.",
